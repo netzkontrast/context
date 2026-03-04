@@ -1,0 +1,23 @@
+{
+  "name": "claude-suite",
+  "version": "0.1.0",
+  "description": "Enterprise-grade orchestration for autonomous AI workflows.",
+  "main": "bin/install.js",
+  "bin": {
+    "claude-suite": "bin/install.js"
+  },
+  "scripts": {
+    "start": "node bin/install.js"
+  },
+  "keywords": [
+    "claude",
+    "ai",
+    "automation",
+    "context-engineering"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.0.0"
+  }
+}
