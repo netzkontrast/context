@@ -10,6 +10,7 @@ Agents working on this repository **MUST** keep the following documentation file
 - `planning.md` - Tracks the overall project intent and current focus.
 - `roadmap.md` - Tracks the chronological phases and completion state.
 - `backlog.md` - Tracks features or alternative implementations (like Python/Typer architecture ideas) excluded from the immediate sprint.
+- `sources.md` - Tracks all external repositories, ecosystems, and scanning tools relevant to the suite's architecture and security. If integrating new tools or performing analysis, agents MUST consult and update [sources.md](./sources.md).
 
 ## Git Protocol
 - Every successful atomic feature completion MUST result in an isolated commit describing the specific logic added.
