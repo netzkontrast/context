@@ -13,11 +13,13 @@ const path = require('path');
  *   * **Requirements Mapped**: [REQ-01, REQ-02]
  */
 function parseRoadmap(filePath) {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`Roadmap not found: ${filePath}`);
+  let content;
+  try {
+    content = fs.readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    if (err.code === 'ENOENT') throw new Error(`Roadmap not found: ${filePath}`);
+    throw err;
   }
-
-  const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const phases = [];
   let currentPhase = null;

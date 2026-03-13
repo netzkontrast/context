@@ -25,6 +25,15 @@ class AgentOrchestrator extends EventEmitter {
     this.basePath = options.basePath || process.cwd();
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
+    this._stateDirCreated = false;
+
+    // Pre-load shared context files once instead of per-agent
+    this._constraints = null;
+    this._requirements = null;
+    const projectPath = path.join(this.suitePath, 'PROJECT.md');
+    const reqPath = path.join(this.suitePath, 'REQUIREMENTS.md');
+    try { this._constraints = fs.readFileSync(projectPath, 'utf-8'); } catch {}
+    try { this._requirements = fs.readFileSync(reqPath, 'utf-8'); } catch {}
   }
 
   /**
@@ -192,25 +201,11 @@ class AgentOrchestrator extends EventEmitter {
    * Only includes what the agent needs for its specific task.
    */
   _buildSterileContext(task) {
-    const context = {
+    return {
       task: task.description,
-      constraints: null,
-      requirements: null,
+      constraints: this._constraints,
+      requirements: this._requirements,
     };
-
-    // Load PROJECT.md constraints if available
-    const projectPath = path.join(this.suitePath, 'PROJECT.md');
-    if (fs.existsSync(projectPath)) {
-      context.constraints = fs.readFileSync(projectPath, 'utf-8');
-    }
-
-    // Load REQUIREMENTS.md if available
-    const reqPath = path.join(this.suitePath, 'REQUIREMENTS.md');
-    if (fs.existsSync(reqPath)) {
-      context.requirements = fs.readFileSync(reqPath, 'utf-8');
-    }
-
-    return context;
   }
 
   /**
@@ -248,7 +243,10 @@ ${completedTasks}
 `;
 
     try {
-      fs.mkdirSync(path.dirname(this.stateFile), { recursive: true });
+      if (!this._stateDirCreated) {
+        fs.mkdirSync(path.dirname(this.stateFile), { recursive: true });
+        this._stateDirCreated = true;
+      }
       fs.writeFileSync(this.stateFile, content, 'utf-8');
     } catch {
       // STATE.md write is best-effort; don't fail execution

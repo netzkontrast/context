@@ -40,6 +40,7 @@ try {
 
 // Initialize MCP tools scoped to the project sandbox
 const mcpTools = createFileSystemRegistry(basePath);
+const availableTools = mcpTools.list();
 
 // Report what this agent received and its capabilities
 const report = {
@@ -47,11 +48,11 @@ const report = {
   task: taskDescription,
   hasConstraints: context.constraints !== null,
   hasRequirements: context.requirements !== null,
-  mcpTools: mcpTools.list().map(t => t.name),
+  mcpTools: availableTools.map(t => t.name),
   nyquistEnabled: true,
   skipPermissions,
   status: 'ready',
-  message: `Agent for "${taskDescription}" spawned with sterile context, ${mcpTools.list().length} MCP tools, and Nyquist verification.`,
+  message: `Agent for "${taskDescription}" spawned with sterile context, ${availableTools.length} MCP tools, and Nyquist verification.`,
 };
 
 console.log(JSON.stringify(report));

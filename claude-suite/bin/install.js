@@ -17,6 +17,37 @@ const reset = '\x1b[0m';
 
 const pkg = require('../package.json');
 
+// Shared helpers to avoid copy-paste across commands
+function printBanner(title) {
+  console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+  console.log(`${cyan} CLAUDE SUITE ► ${title}${reset}`);
+  console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+}
+
+function requirePhaseIndex(phase) {
+  const phaseIndex = parseInt(phase, 10);
+  if (isNaN(phaseIndex)) {
+    console.error(`${yellow}⚠ Phase must be a number (e.g., 0, 1, 2).${reset}`);
+    process.exit(1);
+  }
+  return phaseIndex;
+}
+
+function loadRoadmap() {
+  const roadmapPath = resolveRoadmapPath(process.cwd());
+  if (!roadmapPath) {
+    console.error(`${yellow}⚠ No ROADMAP.md found. Run 'claude-suite new-project' first or place a ROADMAP.md in the working directory.${reset}`);
+    process.exit(1);
+  }
+  console.log(`Reading roadmap: ${roadmapPath}`);
+  const phases = parseRoadmap(roadmapPath);
+  if (phases.length === 0) {
+    console.error(`${yellow}⚠ No phases found in roadmap.${reset}`);
+    process.exit(1);
+  }
+  return phases;
+}
+
 program
   .name('claude-suite')
   .description('Enterprise-grade orchestration for autonomous AI workflows.')
@@ -72,9 +103,7 @@ program
   .description('Initialize a new project and generate PROJECT.md, ROADMAP.md, etc.')
   .option('--auto', 'Run in autonomous mode, bypassing interactive prompts')
   .action((options) => {
-    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
-    console.log(`${cyan} CLAUDE SUITE ► INITIALIZING NEW PROJECT${reset}`);
-    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+    printBanner('INITIALIZING NEW PROJECT');
 
     const projectDir = path.join(process.cwd(), '.suite');
 
@@ -108,29 +137,9 @@ program
   .option('--research', 'Perform domain research first')
   .option('--dag', 'Output the full DAG as JSON')
   .action((phase, options) => {
-     const phaseIndex = parseInt(phase, 10);
-     if (isNaN(phaseIndex)) {
-       console.error(`${yellow}⚠ Phase must be a number (e.g., 0, 1, 2).${reset}`);
-       process.exit(1);
-     }
-
-     console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
-     console.log(`${cyan} CLAUDE SUITE ► PLANNING PHASE ${phase}${reset}`);
-     console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
-
-     const roadmapPath = resolveRoadmapPath(process.cwd());
-     if (!roadmapPath) {
-       console.error(`${yellow}⚠ No ROADMAP.md found. Run 'claude-suite new-project' first or place a ROADMAP.md in the working directory.${reset}`);
-       process.exit(1);
-     }
-
-     console.log(`Reading roadmap: ${roadmapPath}`);
-
-     const phases = parseRoadmap(roadmapPath);
-     if (phases.length === 0) {
-       console.error(`${yellow}⚠ No phases found in roadmap.${reset}`);
-       process.exit(1);
-     }
+     const phaseIndex = requirePhaseIndex(phase);
+     printBanner(`PLANNING PHASE ${phase}`);
+     const phases = loadRoadmap();
 
      const plan = formatPhasePlan(phases, phaseIndex);
      if (!plan) {
@@ -155,23 +164,9 @@ program
   .option('--dangerously-skip-permissions', 'Skip manual confirmations for destructive operations')
   .option('--concurrency <n>', 'Max parallel agents per wave', '4')
   .action(async (phase, options) => {
-     const phaseIndex = parseInt(phase, 10);
-     if (isNaN(phaseIndex)) {
-       console.error(`${yellow}⚠ Phase must be a number (e.g., 0, 1, 2).${reset}`);
-       process.exit(1);
-     }
-
-     console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
-     console.log(`${cyan} CLAUDE SUITE ► EXECUTING PHASE ${phase}${reset}`);
-     console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
-
-     const roadmapPath = resolveRoadmapPath(process.cwd());
-     if (!roadmapPath) {
-       console.error(`${yellow}⚠ No ROADMAP.md found. Run 'claude-suite new-project' first.${reset}`);
-       process.exit(1);
-     }
-
-     const phases = parseRoadmap(roadmapPath);
+     const phaseIndex = requirePhaseIndex(phase);
+     printBanner(`EXECUTING PHASE ${phase}`);
+     const phases = loadRoadmap();
      const dag = buildDAG(phases);
 
      const suitePath = path.join(process.cwd(), '.suite');
@@ -231,9 +226,7 @@ program
   .command('mcp-tools')
   .description('List all registered MCP tool capabilities')
   .action(() => {
-    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
-    console.log(`${cyan} CLAUDE SUITE ► MCP TOOL REGISTRY${reset}`);
-    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+    printBanner('MCP TOOL REGISTRY');
 
     const registry = createFileSystemRegistry(process.cwd());
     const tools = registry.list();
@@ -251,9 +244,7 @@ program
   .command('verify <command...>')
   .description('Run Nyquist Layer verification on shell command(s)')
   .action((commands) => {
-    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
-    console.log(`${cyan} CLAUDE SUITE ► NYQUIST VERIFICATION${reset}`);
-    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+    printBanner('NYQUIST VERIFICATION');
 
     const joined = commands.join(' ');
     const result = classifyCommand(joined);

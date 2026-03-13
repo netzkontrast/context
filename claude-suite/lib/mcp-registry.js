@@ -79,10 +79,12 @@ function createFileSystemRegistry(basePath) {
     readOnly: true,
     handler: ({ path: filePath }) => {
       const resolved = safePath(filePath);
-      if (!fs.existsSync(resolved)) {
-        throw new Error(`File not found: ${filePath}`);
+      try {
+        return fs.readFileSync(resolved, 'utf-8');
+      } catch (err) {
+        if (err.code === 'ENOENT') throw new Error(`File not found: ${filePath}`);
+        throw err;
       }
-      return fs.readFileSync(resolved, 'utf-8');
     },
   });
 
@@ -106,10 +108,13 @@ function createFileSystemRegistry(basePath) {
     readOnly: true,
     handler: ({ path: dirPath = '.' }) => {
       const resolved = safePath(dirPath);
-      if (!fs.existsSync(resolved)) {
-        throw new Error(`Directory not found: ${dirPath}`);
+      let entries;
+      try {
+        entries = fs.readdirSync(resolved, { withFileTypes: true });
+      } catch (err) {
+        if (err.code === 'ENOENT') throw new Error(`Directory not found: ${dirPath}`);
+        throw err;
       }
-      const entries = fs.readdirSync(resolved, { withFileTypes: true });
       return entries.map(e => ({
         name: e.name,
         type: e.isDirectory() ? 'directory' : 'file',
@@ -135,10 +140,12 @@ function createFileSystemRegistry(basePath) {
     readOnly: false,
     handler: ({ path: filePath }) => {
       const resolved = safePath(filePath);
-      if (!fs.existsSync(resolved)) {
-        throw new Error(`File not found: ${filePath}`);
+      try {
+        fs.unlinkSync(resolved);
+      } catch (err) {
+        if (err.code === 'ENOENT') throw new Error(`File not found: ${filePath}`);
+        throw err;
       }
-      fs.unlinkSync(resolved);
       return { deleted: filePath };
     },
   });
