@@ -8,6 +8,8 @@ const { parseRoadmap, buildDAG, formatPhasePlan, resolveRoadmapPath } = require(
 const { AgentOrchestrator } = require('../lib/orchestrator');
 const { createFileSystemRegistry } = require('../lib/mcp-registry');
 const { classifyCommand, verifyCommands, scanCodeBlock } = require('../lib/nyquist');
+const { ContextDistiller } = require('../lib/context-distiller');
+const { ContextAssembler } = require('../lib/context-assembler');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -263,6 +265,52 @@ program
 
     if (result.classification === 'blocked') {
       process.exit(1);
+    }
+  });
+
+program
+  .command('context-distill <file>')
+  .description('Compress a file into a dense context summary')
+  .option('--mode <mode>', 'Compression mode: structural, semantic, diff', 'structural')
+  .action((file, options) => {
+    printBanner('CONTEXT DISTILLER');
+    const distiller = new ContextDistiller({ basePath: process.cwd() });
+    const result = distiller.distillFile(file, { mode: options.mode });
+
+    if (result.error) {
+      console.error(`${yellow}⚠ ${result.error}: ${file}${reset}`);
+      process.exit(1);
+    }
+
+    console.log(result.distilled);
+    console.log(`\n${green}✓ Distilled ${file} (mode: ${options.mode}).${reset}`);
+  });
+
+program
+  .command('context-assemble <task>')
+  .description('Build an optimal context package for a task')
+  .option('--mode <mode>', 'Compression mode: structural, semantic, diff', 'structural')
+  .option('--save <path>', 'Save context package to file')
+  .option('--budget <tokens>', 'Max token budget', '100000')
+  .action((task, options) => {
+    printBanner('CONTEXT ASSEMBLER');
+    const assembler = new ContextAssembler({
+      basePath: process.cwd(),
+      maxTokenBudget: parseInt(options.budget, 10),
+    });
+
+    const pkg = assembler.assemble(task, { mode: options.mode });
+
+    console.log(`Keywords: ${pkg.keywords.join(', ')}`);
+    console.log(`Files scanned: ${pkg.stats.filesScanned}`);
+    console.log(`Files included: ${pkg.stats.filesIncluded}`);
+    console.log(`Estimated tokens: ~${pkg.stats.estimatedTokens}`);
+
+    if (options.save) {
+      const saved = assembler.save(pkg, options.save);
+      console.log(`\n${green}✓ Context package saved to ${saved}${reset}`);
+    } else {
+      console.log('\n' + assembler._formatAsMarkdown(pkg));
     }
   });
 

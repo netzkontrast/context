@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { verifyCommands, CLASSIFICATION } = require('./nyquist');
+const { enrichContext } = require('./context-gate');
 
 /**
  * AgentOrchestrator manages the lifecycle of wave-based task execution.
@@ -23,6 +24,7 @@ class AgentOrchestrator extends EventEmitter {
     this.skipPermissions = options.skipPermissions || false;
     this.suitePath = options.suitePath || path.join(process.cwd(), '.suite');
     this.basePath = options.basePath || process.cwd();
+    this.useContextGate = options.contextGate !== false; // enabled by default
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
     this._stateDirCreated = false;
@@ -201,11 +203,18 @@ class AgentOrchestrator extends EventEmitter {
    * Only includes what the agent needs for its specific task.
    */
   _buildSterileContext(task) {
-    return {
+    const base = {
       task: task.description,
       constraints: this._constraints,
       requirements: this._requirements,
     };
+
+    // Context Gate: enrich with relevant files from the codebase
+    if (this.useContextGate) {
+      return enrichContext(task.description, this.basePath, base);
+    }
+
+    return base;
   }
 
   /**
