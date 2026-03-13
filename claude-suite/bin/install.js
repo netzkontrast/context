@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 const { program } = require('commander');
+const { parseRoadmap, buildDAG, formatPhasePlan, resolveRoadmapPath } = require('../lib/roadmap-parser');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -102,14 +103,46 @@ program
   .command('plan-phase <phase>')
   .description('Plan a specific phase defined in the roadmap')
   .option('--research', 'Perform domain research first')
+  .option('--dag', 'Output the full DAG as JSON')
   .action((phase, options) => {
+     const phaseIndex = parseInt(phase, 10);
+     if (isNaN(phaseIndex)) {
+       console.error(`${yellow}⚠ Phase must be a number (e.g., 0, 1, 2).${reset}`);
+       process.exit(1);
+     }
+
      console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
      console.log(`${cyan} CLAUDE SUITE ► PLANNING PHASE ${phase}${reset}`);
      console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
 
-     // Mock execution
-     console.log(`Looking up Phase ${phase} in ROADMAP.md...`);
-     console.log(`Generating execution DAG...`);
+     const roadmapPath = resolveRoadmapPath(process.cwd());
+     if (!roadmapPath) {
+       console.error(`${yellow}⚠ No ROADMAP.md found. Run 'claude-suite new-project' first or place a ROADMAP.md in the working directory.${reset}`);
+       process.exit(1);
+     }
+
+     console.log(`Reading roadmap: ${roadmapPath}`);
+
+     const phases = parseRoadmap(roadmapPath);
+     if (phases.length === 0) {
+       console.error(`${yellow}⚠ No phases found in roadmap.${reset}`);
+       process.exit(1);
+     }
+
+     const plan = formatPhasePlan(phases, phaseIndex);
+     if (!plan) {
+       console.error(`${yellow}⚠ Phase ${phaseIndex} not found in roadmap. Available phases: ${phases.map(p => p.index).join(', ')}${reset}`);
+       process.exit(1);
+     }
+
+     console.log(`\n${plan}\n`);
+
+     if (options.dag) {
+       const dag = buildDAG(phases);
+       console.log(`\n${cyan}DAG (JSON):${reset}`);
+       console.log(JSON.stringify(dag, null, 2));
+     }
+
      console.log(`\n${green}✓ Phase ${phase} planned.${reset}`);
   });
 
