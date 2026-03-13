@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const { program } = require('commander');
 const { parseRoadmap, buildDAG, formatPhasePlan, resolveRoadmapPath } = require('../lib/roadmap-parser');
+const { AgentOrchestrator } = require('../lib/orchestrator');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -150,15 +151,78 @@ program
   .command('execute-phase <phase>')
   .description('Execute a planned phase using Wave Execution')
   .option('--dangerously-skip-permissions', 'Skip manual confirmations for destructive operations')
-  .action((phase, options) => {
+  .option('--concurrency <n>', 'Max parallel agents per wave', '4')
+  .action(async (phase, options) => {
+     const phaseIndex = parseInt(phase, 10);
+     if (isNaN(phaseIndex)) {
+       console.error(`${yellow}⚠ Phase must be a number (e.g., 0, 1, 2).${reset}`);
+       process.exit(1);
+     }
+
      console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
      console.log(`${cyan} CLAUDE SUITE ► EXECUTING PHASE ${phase}${reset}`);
      console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
 
-     // Mock execution
-     console.log(`Spawning orchestrator...`);
-     console.log(`Launching parallel Wave 1...`);
-     console.log(`\n${green}✓ Phase ${phase} complete.${reset}`);
+     const roadmapPath = resolveRoadmapPath(process.cwd());
+     if (!roadmapPath) {
+       console.error(`${yellow}⚠ No ROADMAP.md found. Run 'claude-suite new-project' first.${reset}`);
+       process.exit(1);
+     }
+
+     const phases = parseRoadmap(roadmapPath);
+     const dag = buildDAG(phases);
+
+     const suitePath = path.join(process.cwd(), '.suite');
+     const orchestrator = new AgentOrchestrator({
+       concurrency: parseInt(options.concurrency, 10),
+       skipPermissions: options.dangerouslySkipPermissions || false,
+       suitePath,
+     });
+
+     // Wire up event logging
+     orchestrator.on('phase:start', ({ phase: p }) => {
+       console.log(`${cyan}▶ Starting: ${p}${reset}`);
+     });
+     orchestrator.on('wave:start', ({ waveIndex, taskCount }) => {
+       console.log(`${cyan}  Wave ${waveIndex}: launching ${taskCount} parallel agent(s)...${reset}`);
+     });
+     orchestrator.on('agent:start', ({ taskId, description }) => {
+       console.log(`    [${taskId}] ${description}`);
+     });
+     orchestrator.on('agent:end', ({ taskId, exitCode }) => {
+       const icon = exitCode === 0 ? `${green}✓${reset}` : `${yellow}✗${reset}`;
+       console.log(`    ${icon} [${taskId}] exit ${exitCode}`);
+     });
+     orchestrator.on('wave:complete', ({ waveIndex }) => {
+       console.log(`${green}  ✓ Wave ${waveIndex} complete.${reset}`);
+     });
+     orchestrator.on('wave:blocked', ({ waveIndex, failures }) => {
+       console.error(`${yellow}  ✗ Wave ${waveIndex} blocked. ${failures.length} task(s) failed.${reset}`);
+     });
+
+     try {
+       const wavePlan = orchestrator.planWaves(dag, phaseIndex);
+
+       if (wavePlan.waves.length === 0) {
+         console.log(`${green}✓ All tasks in Phase ${phase} are already complete.${reset}`);
+         return;
+       }
+
+       console.log(`Planned ${wavePlan.waves.length} wave(s) with ${wavePlan.waves.reduce((n, w) => n + w.tasks.length, 0)} task(s).\n`);
+
+       const results = await orchestrator.execute(wavePlan);
+
+       console.log('');
+       if (results.status === 'completed') {
+         console.log(`${green}✓ Phase ${phase} complete.${reset}`);
+       } else {
+         console.log(`${yellow}⚠ Phase ${phase} blocked. Check STATE.md for details.${reset}`);
+         process.exit(1);
+       }
+     } catch (err) {
+       console.error(`${yellow}⚠ Execution error: ${err.message}${reset}`);
+       process.exit(1);
+     }
   });
 
 // Execute
