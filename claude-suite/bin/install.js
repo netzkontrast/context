@@ -6,6 +6,8 @@ const os = require('os');
 const { program } = require('commander');
 const { parseRoadmap, buildDAG, formatPhasePlan, resolveRoadmapPath } = require('../lib/roadmap-parser');
 const { AgentOrchestrator } = require('../lib/orchestrator');
+const { createFileSystemRegistry } = require('../lib/mcp-registry');
+const { classifyCommand, verifyCommands, scanCodeBlock } = require('../lib/nyquist');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -223,6 +225,54 @@ program
        console.error(`${yellow}⚠ Execution error: ${err.message}${reset}`);
        process.exit(1);
      }
+  });
+
+program
+  .command('mcp-tools')
+  .description('List all registered MCP tool capabilities')
+  .action(() => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► MCP TOOL REGISTRY${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    const registry = createFileSystemRegistry(process.cwd());
+    const tools = registry.list();
+
+    tools.forEach(tool => {
+      const badge = tool.readOnly ? `${green}[read-only]${reset}` : `${yellow}[write]${reset}`;
+      console.log(`  ${badge} ${cyan}${tool.name}${reset}`);
+      console.log(`         ${tool.description}`);
+    });
+
+    console.log(`\n  Total: ${tools.length} tool(s) registered.\n`);
+  });
+
+program
+  .command('verify <command...>')
+  .description('Run Nyquist Layer verification on shell command(s)')
+  .action((commands) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► NYQUIST VERIFICATION${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    const joined = commands.join(' ');
+    const result = classifyCommand(joined);
+
+    const colorMap = {
+      safe: green,
+      guarded: yellow,
+      blocked: '\x1b[31m',
+    };
+    const color = colorMap[result.classification] || reset;
+
+    console.log(`  Command:        ${joined}`);
+    console.log(`  Classification: ${color}${result.classification.toUpperCase()}${reset}`);
+    console.log(`  Reason:         ${result.reason}`);
+    console.log('');
+
+    if (result.classification === 'blocked') {
+      process.exit(1);
+    }
   });
 
 // Execute

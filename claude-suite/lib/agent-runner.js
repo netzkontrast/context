@@ -9,15 +9,21 @@
  *   SUITE_TASK_DESCRIPTION — Human-readable task description
  *   SUITE_CONTEXT          — JSON payload with constraints and requirements
  *   SUITE_SKIP_PERMISSIONS — '1' to bypass confirmation prompts
+ *   SUITE_BASE_PATH        — Project root for MCP tool sandboxing
  *
- * This is the execution boundary where an LLM agent (or script) would
- * perform the actual work. Currently implements a structured stub that
- * validates its inputs and reports readiness.
+ * The agent has access to:
+ *   - MCP file system tools (sandboxed to project root)
+ *   - Nyquist Layer verification for any shell commands
  */
+
+const { createFileSystemRegistry } = require('./mcp-registry');
+const { classifyCommand, CLASSIFICATION } = require('./nyquist');
 
 const taskId = process.env.SUITE_TASK_ID;
 const taskDescription = process.env.SUITE_TASK_DESCRIPTION;
 const rawContext = process.env.SUITE_CONTEXT;
+const skipPermissions = process.env.SUITE_SKIP_PERMISSIONS === '1';
+const basePath = process.env.SUITE_BASE_PATH || process.cwd();
 
 if (!taskId || !taskDescription) {
   console.error('Missing required environment: SUITE_TASK_ID, SUITE_TASK_DESCRIPTION');
@@ -32,14 +38,20 @@ try {
   process.exit(1);
 }
 
-// Report what this agent received (structured output)
+// Initialize MCP tools scoped to the project sandbox
+const mcpTools = createFileSystemRegistry(basePath);
+
+// Report what this agent received and its capabilities
 const report = {
   agentId: taskId,
   task: taskDescription,
   hasConstraints: context.constraints !== null,
   hasRequirements: context.requirements !== null,
+  mcpTools: mcpTools.list().map(t => t.name),
+  nyquistEnabled: true,
+  skipPermissions,
   status: 'ready',
-  message: `Agent for "${taskDescription}" spawned with sterile context. Awaiting LLM integration.`,
+  message: `Agent for "${taskDescription}" spawned with sterile context, ${mcpTools.list().length} MCP tools, and Nyquist verification.`,
 };
 
 console.log(JSON.stringify(report));

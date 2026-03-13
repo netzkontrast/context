@@ -13,8 +13,8 @@
 - [x] Implement sterile context spawning mechanisms.
 
 ## Phase 3: MCP Integrations
-- [ ] Implement standard file system operations as MCP capabilities.
-- [ ] Implement local script/AST verification tools (the Nyquist Layer).
+- [x] Implement standard file system operations as MCP capabilities.
+- [x] Implement local script/AST verification tools (the Nyquist Layer).
 
 ## Phase 4: Refinement
 - [ ] Finalize the Truth Verification statistical thresholds.

@@ -4,6 +4,7 @@ const { EventEmitter } = require('events');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { verifyCommands, CLASSIFICATION } = require('./nyquist');
 
 /**
  * AgentOrchestrator manages the lifecycle of wave-based task execution.
@@ -21,6 +22,7 @@ class AgentOrchestrator extends EventEmitter {
     this.concurrency = options.concurrency || 4;
     this.skipPermissions = options.skipPermissions || false;
     this.suitePath = options.suitePath || path.join(process.cwd(), '.suite');
+    this.basePath = options.basePath || process.cwd();
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
   }
@@ -152,6 +154,7 @@ class AgentOrchestrator extends EventEmitter {
           SUITE_TASK_DESCRIPTION: task.description,
           SUITE_CONTEXT: JSON.stringify(context),
           SUITE_SKIP_PERMISSIONS: this.skipPermissions ? '1' : '0',
+          SUITE_BASE_PATH: this.basePath,
         },
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 300000, // 5 minute timeout per agent
