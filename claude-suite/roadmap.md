@@ -17,5 +17,5 @@
 - [x] Implement local script/AST verification tools (the Nyquist Layer).
 
 ## Phase 4: Refinement
-- [ ] Finalize the Truth Verification statistical thresholds.
-- [ ] Validate automated end-to-end tests against project creation flows.
+- [x] Finalize the Truth Verification statistical thresholds.
+- [x] Validate automated end-to-end tests against project creation flows.

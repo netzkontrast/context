@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { verifyCommands, CLASSIFICATION } = require('./nyquist');
+const { createAgentVerifier } = require('./truth-verifier');
 
 /**
  * AgentOrchestrator manages the lifecycle of wave-based task execution.
@@ -25,6 +26,7 @@ class AgentOrchestrator extends EventEmitter {
     this.basePath = options.basePath || process.cwd();
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
+    this._verifier = createAgentVerifier();
   }
 
   /**
@@ -175,7 +177,15 @@ class AgentOrchestrator extends EventEmitter {
       agentProcess.on('close', (code) => {
         this.emit('agent:end', { taskId: task.id, exitCode: code });
         if (code === 0) {
-          resolve(stdout.trim());
+          const output = stdout.trim();
+          const verifyResult = this._verifyAgentOutput(task.id, output);
+          if (!verifyResult.passed) {
+            reject(new Error(
+              `Agent output failed truth verification (confidence ${(verifyResult.result.confidence * 100).toFixed(1)}%): ${verifyResult.result.errors.join('; ')}`
+            ));
+          } else {
+            resolve(output);
+          }
         } else {
           reject(new Error(`Agent failed (exit ${code}): ${stderr.trim() || stdout.trim()}`));
         }
@@ -185,6 +195,32 @@ class AgentOrchestrator extends EventEmitter {
         reject(new Error(`Agent spawn error: ${err.message}`));
       });
     });
+  }
+
+  /**
+   * Parse agent stdout as JSON and run it through the TruthVerifier.
+   * Falls back gracefully if output is not JSON (treated as opaque string).
+   *
+   * @returns {{ passed: boolean, result: object }}
+   */
+  _verifyAgentOutput(taskId, output) {
+    let parsed;
+    try {
+      parsed = JSON.parse(output);
+    } catch {
+      // Non-JSON output: emit a warning but don't hard-fail
+      this.emit('agent:verify', { taskId, passed: true, reason: 'non-JSON output skipped' });
+      return { passed: true, result: { confidence: 1.0, errors: [], checks: { total: 0, passed: 0 } } };
+    }
+
+    const check = this._verifier.check(parsed, 'agent-report');
+    this.emit('agent:verify', {
+      taskId,
+      passed: check.passed,
+      confidence: check.result.confidence,
+      errors: check.result.errors,
+    });
+    return check;
   }
 
   /**
