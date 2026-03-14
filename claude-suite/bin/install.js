@@ -8,6 +8,8 @@ const { parseRoadmap, buildDAG, formatPhasePlan, resolveRoadmapPath } = require(
 const { AgentOrchestrator } = require('../lib/orchestrator');
 const { createFileSystemRegistry } = require('../lib/mcp-registry');
 const { classifyCommand, verifyCommands, scanCodeBlock } = require('../lib/nyquist');
+const { ContextEngine } = require('../lib/context-engine');
+const { createDefaultHooks } = require('../lib/hooks');
 
 // Colors
 const cyan = '\x1b[36m';
@@ -273,6 +275,101 @@ program
     if (result.classification === 'blocked') {
       process.exit(1);
     }
+  });
+
+program
+  .command('context')
+  .description('Manage the Context Engine (SQLite FTS5 knowledge store)')
+  .option('--store <title>', 'Store a new fragment (reads content from stdin)')
+  .option('--search <query>', 'Full-text search across stored fragments')
+  .option('--list', 'List recent fragments')
+  .option('--type <type>', 'Filter by fragment type (note, decision, snippet, research, error, plan)')
+  .option('--phase <phase>', 'Filter by phase')
+  .option('--limit <n>', 'Max results', '10')
+  .action((options) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► CONTEXT ENGINE${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    const suitePath = path.join(process.cwd(), '.suite');
+    const dbPath = path.join(suitePath, 'context.db');
+    const engine = new ContextEngine(dbPath);
+    const limit = parseInt(options.limit, 10) || 10;
+
+    try {
+      if (options.search) {
+        const results = engine.search(options.search, {
+          type: options.type,
+          phase: options.phase,
+          limit,
+        });
+        if (results.length === 0) {
+          console.log(`  No results for "${options.search}"`);
+        } else {
+          results.forEach(r => {
+            console.log(`  ${cyan}[${r.id}]${reset} ${r.title} ${yellow}(${r.type})${reset}`);
+            console.log(`       ${r.content.substring(0, 120)}${r.content.length > 120 ? '...' : ''}`);
+            console.log('');
+          });
+          console.log(`  ${results.length} result(s).`);
+        }
+      } else if (options.list) {
+        const results = engine.list({
+          type: options.type,
+          phase: options.phase,
+          limit,
+        });
+        if (results.length === 0) {
+          console.log('  No fragments stored yet.');
+        } else {
+          results.forEach(r => {
+            console.log(`  ${cyan}[${r.id}]${reset} ${r.title} ${yellow}(${r.type})${reset} — ${r.created_at}`);
+          });
+          console.log(`\n  ${engine.count()} total fragment(s).`);
+        }
+      } else if (options.store) {
+        // Store mode: title from flag, content from remaining args or a default
+        const content = process.argv.slice(process.argv.indexOf(options.store) + 1).join(' ') || options.store;
+        engine.store({
+          source: 'cli',
+          type: options.type || 'note',
+          phase: options.phase || null,
+          title: options.store,
+          content,
+        });
+        console.log(`  ${green}✓ Fragment stored.${reset}`);
+      } else {
+        console.log(`  Use --search, --list, or --store. See --help for details.`);
+      }
+    } finally {
+      engine.close();
+    }
+    console.log('');
+  });
+
+program
+  .command('hooks')
+  .description('List registered lifecycle hooks (PreToolUse, PostToolUse, EndOfTurn)')
+  .action(() => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► HOOK REGISTRY${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    const registry = createDefaultHooks();
+    const events = ['PreToolUse', 'PostToolUse', 'EndOfTurn'];
+
+    events.forEach(event => {
+      const hooks = registry.list(event);
+      console.log(`  ${cyan}${event}${reset} (${hooks.length} hook${hooks.length !== 1 ? 's' : ''}):`);
+      if (hooks.length === 0) {
+        console.log(`    ${yellow}(none)${reset}`);
+      } else {
+        hooks.forEach(h => {
+          console.log(`    [priority ${h.priority}] ${h.name}`);
+        });
+      }
+      console.log('');
+    });
   });
 
 // Execute

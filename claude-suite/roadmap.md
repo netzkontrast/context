@@ -19,3 +19,11 @@
 ## Phase 4: Refinement
 - [x] Finalize the Truth Verification statistical thresholds.
 - [x] Validate automated end-to-end tests against project creation flows.
+
+## Phase 5: Infrastructure Expansion
+- [x] Implement SQLite FTS5 Context Engine for persistent agent knowledge store.
+- [x] Implement deterministic lifecycle hooks (PreToolUse, PostToolUse, EndOfTurn).
+- [x] Integrate Nyquist safety hook into PreToolUse pipeline.
+- [x] Wire EndOfTurn hooks into orchestrator agent lifecycle.
+- [x] Add CLI commands: `context` (store/search/list) and `hooks` (inspect registry).
+- [x] Comprehensive tests for both modules (49 new test assertions).

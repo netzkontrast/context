@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { verifyCommands, CLASSIFICATION } = require('./nyquist');
 const { createAgentVerifier } = require('./truth-verifier');
+const { createDefaultHooks } = require('./hooks');
 
 /**
  * AgentOrchestrator manages the lifecycle of wave-based task execution.
@@ -27,6 +28,15 @@ class AgentOrchestrator extends EventEmitter {
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
     this._verifier = createAgentVerifier();
+    this._hooks = options.hooks || createDefaultHooks();
+  }
+
+  /**
+   * Access the hook registry for external registration.
+   * @returns {HookRegistry}
+   */
+  get hooks() {
+    return this._hooks;
   }
 
   /**
@@ -180,13 +190,16 @@ class AgentOrchestrator extends EventEmitter {
           const output = stdout.trim();
           const verifyResult = this._verifyAgentOutput(task.id, output);
           if (!verifyResult.passed) {
+            this._hooks.runEndOfTurn({ agentId: task.id, status: 'verify-failed', result: output });
             reject(new Error(
               `Agent output failed truth verification (confidence ${(verifyResult.result.confidence * 100).toFixed(1)}%): ${verifyResult.result.errors.join('; ')}`
             ));
           } else {
+            this._hooks.runEndOfTurn({ agentId: task.id, status: 'completed', result: output });
             resolve(output);
           }
         } else {
+          this._hooks.runEndOfTurn({ agentId: task.id, status: 'failed', result: stderr.trim() });
           reject(new Error(`Agent failed (exit ${code}): ${stderr.trim() || stdout.trim()}`));
         }
       });
