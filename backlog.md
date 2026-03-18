@@ -1,14 +1,37 @@
-# Backlog / REQUIREMENTS.md
+# Backlog
 
-*This file maps scoped feature definitions and test coverage mandates specifically to the build phases.*
+*Deferred requirements and future ideas. Items move to planning.md when scheduled.*
+
+## Scheduled (See planning.md for execution waves)
+- ~~SQLite FTS5 context store~~ → Phase 5
+- ~~JSONL telemetry logging~~ → Phase 5
+- ~~Agent persona ecosystem~~ → Phase 6
+- ~~OS-level hooks (PreToolUse, PostToolUse)~~ → Phase 7
+- ~~Parry/Dippy security integrations~~ → Phase 7
 
 ## Unscheduled Requirements
-- Research and finalize optimal schema validation libraries (e.g., Zod for TypeScript).
-- Establish the central CLI routing layer capable of handling `--auto` and `--dangerously-skip-permissions` modifier flags.
-- Architect the SQLite-backed FTS5 database to support the Deep-Reading Agent Skill (SQ3R).
-- Develop the core Model Context Protocol (MCP) universal integration bus for the orchestrator.
-- Design the OS-level deterministic hooks (PreToolUse, PostToolUse, End-of-turn) for the Nyquist Validation Layer.
-- Establish comprehensive property-based testing for all Zod output schemas.
+- **Zod schema migration**: Evaluate replacing custom TruthVerifier JSON schema subset with Zod for TypeScript migration path. Decision: deferred until TypeScript migration is considered.
+- **Property-based testing**: Generative test cases for agent output schemas. Scheduled tentatively in Phase 6 Wave 4.
+- **Multi-model support**: Support for non-Claude models (GPT-4, Gemini) as agent backends via adapter pattern.
+- **Web dashboard**: Real-time visualization of wave execution, agent status, and telemetry. Electron or browser-based.
+- **Plugin system**: Third-party skill/tool packages installable via npm.
+- **Container isolation**: Run agents in Docker containers instead of subprocesses for stronger isolation.
 
-## Backlogged Tasks
-*Tasks will be moved from here to the DAG in `planning.md` when execution waves commence.*
+## Python Implementation Ideas (Deferred)
+- **Framework:** Python Typer for interactive CLI handling.
+- **Validation:** Pydantic for rigid LLM output schema validation via instructor.
+- **Why deferred:** Node.js fits the `npx` global install footprint more natively. Revisit when/if Python ecosystem demand materializes.
+
+## Advanced Orchestration Ideas (Phase 9+)
+- **Byzantine Fault Tolerance**: Quorum voting for high-stakes code changes (3 agents must agree).
+- **Q-Learning Routing**: Pre-classify queries to assign optimal agent persona without LLM router latency.
+- **Code Digital Twins**: Shadow execution environment mirroring production for pre-validation.
+- **Multi-repo orchestration**: Single suite instance managing multiple repositories with shared context.
+- **Adaptive concurrency**: Auto-tune parallel agent count based on system resources and task complexity.
+
+## Integration Ideas (Phase 8+)
+- Slack approval flows for guarded operations.
+- Jira ticket sync from REQUIREMENTS.md (REQ-IDs to Jira issues).
+- GitHub Actions CI/CD pipeline with test gates.
+- Webhook notifications for phase completion events.
+- VS Code extension for in-editor wave execution monitoring.
