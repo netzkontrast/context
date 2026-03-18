@@ -27,6 +27,18 @@ class AgentOrchestrator extends EventEmitter {
     this.stateFile = path.join(this.suitePath, 'STATE.md');
     this._aborted = false;
     this._verifier = createAgentVerifier();
+
+    // Optional Phase 5 integrations (graceful degradation if not installed)
+    this._telemetry = null;
+    this._contextStore = null;
+    try {
+      const { Telemetry } = require('./telemetry');
+      this._telemetry = new Telemetry({ logDir: path.join(this.suitePath, 'telemetry') });
+    } catch { /* telemetry not available */ }
+    try {
+      const { ContextStore } = require('./context-store');
+      this._contextStore = new ContextStore({ dbPath: path.join(this.suitePath, 'context.db') });
+    } catch { /* context-store not available */ }
   }
 
   /**
@@ -71,28 +83,49 @@ class AgentOrchestrator extends EventEmitter {
    */
   async execute(wavePlan) {
     const { phase, waves } = wavePlan;
+    const sessionId = `session-${Date.now()}`;
+
+    // Create session in context store
+    if (this._contextStore) {
+      try {
+        this._contextStore.createSession(sessionId, phase.label, { concurrency: this.concurrency });
+      } catch { /* best-effort */ }
+    }
 
     this.emit('phase:start', { phase: phase.label });
     this._writeState('running', phase.label, []);
+    if (this._telemetry) this._telemetry.phaseStart(sessionId, phase.label);
 
-    const results = { phase: phase.label, waves: [] };
+    const results = { phase: phase.label, sessionId, waves: [] };
 
     for (const wave of waves) {
       if (this._aborted) break;
 
       this.emit('wave:start', { waveIndex: wave.index, taskCount: wave.tasks.length });
+      if (this._telemetry) this._telemetry.waveStart(sessionId, wave.index, wave.tasks.length);
 
-      const waveResults = await this._executeWave(wave);
+      const waveStart = Date.now();
+      const waveResults = await this._executeWave(wave, sessionId);
       results.waves.push(waveResults);
 
       const failed = waveResults.tasks.filter(t => t.status === 'failed');
       if (failed.length > 0) {
         this.emit('wave:blocked', { waveIndex: wave.index, failures: failed });
+        if (this._telemetry) this._telemetry.waveComplete(sessionId, wave.index, {
+          completed: waveResults.tasks.length - failed.length,
+          failed: failed.length,
+          durationMs: Date.now() - waveStart,
+        });
         this._writeBlocker(failed);
         break;
       }
 
       this.emit('wave:complete', { waveIndex: wave.index });
+      if (this._telemetry) this._telemetry.waveComplete(sessionId, wave.index, {
+        completed: waveResults.tasks.length,
+        failed: 0,
+        durationMs: Date.now() - waveStart,
+      });
     }
 
     const allPassed = results.waves.every(w => w.tasks.every(t => t.status === 'completed'));
@@ -100,6 +133,14 @@ class AgentOrchestrator extends EventEmitter {
 
     this._writeState(results.status, phase.label, results.waves);
     this.emit('phase:end', { phase: phase.label, status: results.status });
+    if (this._telemetry) this._telemetry.phaseEnd(sessionId, phase.label, results.status);
+
+    // Update session status
+    if (this._contextStore) {
+      try {
+        this._contextStore.updateSessionStatus(sessionId, results.status);
+      } catch { /* best-effort */ }
+    }
 
     return results;
   }
@@ -107,14 +148,48 @@ class AgentOrchestrator extends EventEmitter {
   /**
    * Run all tasks in a wave concurrently, respecting concurrency limit.
    */
-  async _executeWave(wave) {
+  async _executeWave(wave, sessionId) {
     const taskResults = [];
     const pending = [...wave.tasks];
 
     while (pending.length > 0) {
       const batch = pending.splice(0, this.concurrency);
       const batchResults = await Promise.allSettled(
-        batch.map(task => this._spawnAgent(task))
+        batch.map(task => {
+          const agentId = `agent-${task.id}-${Date.now()}`;
+
+          // Record execution start
+          if (this._contextStore) {
+            try {
+              this._contextStore.recordExecution({
+                id: agentId, sessionId, taskId: task.id, waveIndex: wave.index, agentId,
+              });
+            } catch { /* best-effort */ }
+          }
+          if (this._telemetry) this._telemetry.agentSpawn(sessionId, task.id, agentId);
+
+          const start = Date.now();
+          return this._spawnAgent(task).then(
+            (output) => {
+              if (this._telemetry) this._telemetry.agentComplete(sessionId, task.id, agentId, {
+                exitCode: 0, durationMs: Date.now() - start,
+              });
+              if (this._contextStore) {
+                try { this._contextStore.completeExecution(agentId, output, 0); } catch { /* */ }
+              }
+              return output;
+            },
+            (err) => {
+              if (this._telemetry) this._telemetry.agentFail(sessionId, task.id, agentId, {
+                message: err.message, exitCode: 1,
+              });
+              if (this._contextStore) {
+                try { this._contextStore.completeExecution(agentId, { error: err.message }, 1); } catch { /* */ }
+              }
+              throw err;
+            }
+          );
+        })
       );
 
       for (let i = 0; i < batch.length; i++) {

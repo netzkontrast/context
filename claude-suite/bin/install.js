@@ -275,5 +275,196 @@ program
     }
   });
 
+// ---------------------------------------------------------------------------
+// Phase 5: Context Store & Telemetry Commands
+// ---------------------------------------------------------------------------
+
+program
+  .command('search <query>')
+  .description('Full-text search across all project context (SQLite FTS5)')
+  .option('-s, --session <id>', 'Limit search to a specific session')
+  .option('-l, --limit <n>', 'Max results', '20')
+  .action((query, options) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► CONTEXT SEARCH${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    let ContextStore;
+    try {
+      ContextStore = require('../lib/context-store').ContextStore;
+    } catch (err) {
+      console.error(`${yellow}⚠ Context store not available. Run 'npm install better-sqlite3' in the claude-suite directory.${reset}`);
+      process.exit(1);
+    }
+
+    const dbPath = path.join(process.cwd(), '.suite', 'context.db');
+    if (!fs.existsSync(dbPath)) {
+      console.error(`${yellow}⚠ No context database found. Execute a phase first to populate context.${reset}`);
+      process.exit(1);
+    }
+
+    const store = new ContextStore({ dbPath });
+    const limit = parseInt(options.limit, 10) || 20;
+    const results = options.session
+      ? store.searchInSession(options.session, query, limit)
+      : store.search(query, limit);
+
+    if (results.length === 0) {
+      console.log(`  No results for "${query}".`);
+    } else {
+      results.forEach((r, i) => {
+        console.log(`  ${cyan}${i + 1}.${reset} [${r.key}] (session: ${r.session_id})`);
+        const preview = r.content.substring(0, 120).replace(/\n/g, ' ');
+        console.log(`     ${preview}${r.content.length > 120 ? '...' : ''}`);
+      });
+      console.log(`\n  ${results.length} result(s) found.\n`);
+    }
+
+    store.close();
+  });
+
+program
+  .command('replay <session>')
+  .description('Replay execution history for a session from telemetry logs')
+  .action((session) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► SESSION REPLAY${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    let Telemetry;
+    try {
+      Telemetry = require('../lib/telemetry').Telemetry;
+    } catch (err) {
+      console.error(`${yellow}⚠ Telemetry module not available.${reset}`);
+      process.exit(1);
+    }
+
+    const logDir = path.join(process.cwd(), '.suite', 'telemetry');
+    if (!fs.existsSync(logDir)) {
+      console.error(`${yellow}⚠ No telemetry logs found. Execute a phase first.${reset}`);
+      process.exit(1);
+    }
+
+    const telemetry = new Telemetry({ logDir });
+    const events = telemetry.readSessionLogs(session);
+    telemetry.close();
+
+    if (events.length === 0) {
+      console.log(`  No events found for session "${session}".`);
+      return;
+    }
+
+    console.log(`  Replaying ${events.length} event(s) for session ${cyan}${session}${reset}:\n`);
+
+    const colorMap = {
+      'phase:start': cyan,
+      'phase:end': green,
+      'wave:start': cyan,
+      'wave:complete': green,
+      'agent:spawn': yellow,
+      'agent:complete': green,
+      'agent:fail': '\x1b[31m',
+      'nyquist:classify': '\x1b[35m',
+    };
+
+    events.forEach((e) => {
+      const color = colorMap[e.type] || reset;
+      const time = e.timestamp ? e.timestamp.substring(11, 19) : '??:??:??';
+      const detail = Object.entries(e)
+        .filter(([k]) => !['type', 'timestamp', 'sessionId'].includes(k))
+        .map(([k, v]) => `${k}=${v}`)
+        .join(' ');
+      console.log(`  ${time} ${color}${e.type}${reset} ${detail}`);
+    });
+
+    console.log('');
+  });
+
+program
+  .command('sessions')
+  .description('List all execution sessions')
+  .option('-s, --status <status>', 'Filter by status (active, completed, failed)')
+  .action((options) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► SESSIONS${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    let ContextStore;
+    try {
+      ContextStore = require('../lib/context-store').ContextStore;
+    } catch (err) {
+      console.error(`${yellow}⚠ Context store not available. Run 'npm install better-sqlite3' in the claude-suite directory.${reset}`);
+      process.exit(1);
+    }
+
+    const dbPath = path.join(process.cwd(), '.suite', 'context.db');
+    if (!fs.existsSync(dbPath)) {
+      console.error(`${yellow}⚠ No context database found.${reset}`);
+      process.exit(1);
+    }
+
+    const store = new ContextStore({ dbPath });
+    const sessions = options.status ? store.listSessions(options.status) : store.listSessions();
+
+    if (sessions.length === 0) {
+      console.log('  No sessions found.');
+    } else {
+      sessions.forEach((s) => {
+        const statusColor = s.status === 'completed' ? green : s.status === 'failed' ? '\x1b[31m' : yellow;
+        console.log(`  ${cyan}${s.id}${reset}  phase=${s.phase}  ${statusColor}${s.status}${reset}  ${s.created_at}`);
+      });
+      console.log(`\n  ${sessions.length} session(s) total.\n`);
+    }
+
+    store.close();
+  });
+
+program
+  .command('budget [session]')
+  .description('Estimate token budget for a session\'s context')
+  .action((session) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► TOKEN BUDGET${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    let ContextStore;
+    try {
+      ContextStore = require('../lib/context-store').ContextStore;
+    } catch (err) {
+      console.error(`${yellow}⚠ Context store not available.${reset}`);
+      process.exit(1);
+    }
+
+    const dbPath = path.join(process.cwd(), '.suite', 'context.db');
+    if (!fs.existsSync(dbPath)) {
+      console.error(`${yellow}⚠ No context database found.${reset}`);
+      process.exit(1);
+    }
+
+    const store = new ContextStore({ dbPath });
+
+    if (session) {
+      const budget = store.getSessionTokenBudget(session);
+      console.log(`  Session: ${cyan}${session}${reset}`);
+      console.log(`  Total estimated tokens: ${yellow}${budget.totalTokens.toLocaleString()}${reset}\n`);
+      Object.entries(budget.breakdown).forEach(([key, tokens]) => {
+        console.log(`    ${key}: ${tokens.toLocaleString()} tokens`);
+      });
+    } else {
+      const sessions = store.listSessions();
+      if (sessions.length === 0) {
+        console.log('  No sessions found.');
+      } else {
+        sessions.forEach((s) => {
+          const budget = store.getSessionTokenBudget(s.id);
+          console.log(`  ${cyan}${s.id}${reset}  ~${yellow}${budget.totalTokens.toLocaleString()}${reset} tokens`);
+        });
+      }
+    }
+
+    console.log('');
+    store.close();
+  });
+
 // Execute
 program.parse(process.argv);
