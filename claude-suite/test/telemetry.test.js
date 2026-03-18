@@ -15,11 +15,9 @@ function cleanup(dir) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
-// Helper: read the JSONL file synchronously (writes are sync via appendFileSync)
-function flushAndRead(telemetry) {
-  const content = fs.readFileSync(telemetry.currentFile, 'utf8');
-  const lines = content.split('\n').filter(l => l.trim());
-  return lines.map(l => JSON.parse(l));
+// Helper: read all entries from the current log file
+function readCurrent(telemetry) {
+  return telemetry.readLog(telemetry.currentFile);
 }
 
 // ── Basic event emission ─────────────────────────────────────────────────────
@@ -28,10 +26,11 @@ test('emit writes a JSONL line to the log file', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.emit({ type: 'test:event', value: 42 });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries.length, 1);
   assert.equal(entries[0].type, 'test:event');
   assert.equal(entries[0].value, 42);
+  t.close();
   cleanup(dir);
 });
 
@@ -39,10 +38,11 @@ test('emit injects a timestamp on every event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.emit({ type: 'ts:check' });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.ok(entries[0].timestamp);
   // ISO 8601 format check
   assert.ok(/^\d{4}-\d{2}-\d{2}T/.test(entries[0].timestamp));
+  t.close();
   cleanup(dir);
 });
 
@@ -52,11 +52,24 @@ test('emit writes multiple events as separate lines', () => {
   t.emit({ type: 'a' });
   t.emit({ type: 'b' });
   t.emit({ type: 'c' });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries.length, 3);
   assert.equal(entries[0].type, 'a');
   assert.equal(entries[1].type, 'b');
   assert.equal(entries[2].type, 'c');
+  t.close();
+  cleanup(dir);
+});
+
+test('emit does nothing after close', () => {
+  const dir = makeTmpDir();
+  const t = new Telemetry({ logDir: dir });
+  t.emit({ type: 'before' });
+  t.close();
+  t.emit({ type: 'after' });
+  const entries = t.readLog(t.currentFile);
+  assert.equal(entries.length, 1);
+  assert.equal(entries[0].type, 'before');
   cleanup(dir);
 });
 
@@ -73,11 +86,11 @@ test('constructor auto-creates logDir if it does not exist', () => {
 
 test('constructor works when logDir already exists', () => {
   const dir = makeTmpDir();
-  // dir already exists from mkdtempSync
   const t = new Telemetry({ logDir: dir });
   t.emit({ type: 'ok' });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries.length, 1);
+  t.close();
   cleanup(dir);
 });
 
@@ -87,13 +100,14 @@ test('agentSpawn emits agent:spawn event with correct fields', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentSpawn('sess-1', 'task-1', 'agent-1', { tokens: 500, tools: ['read', 'write'] });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'agent:spawn');
   assert.equal(entries[0].sessionId, 'sess-1');
   assert.equal(entries[0].taskId, 'task-1');
   assert.equal(entries[0].agentId, 'agent-1');
   assert.equal(entries[0].contextTokens, 500);
   assert.deepEqual(entries[0].tools, ['read', 'write']);
+  t.close();
   cleanup(dir);
 });
 
@@ -101,9 +115,10 @@ test('agentSpawn uses defaults for missing context', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentSpawn('s', 't', 'a');
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].contextTokens, 0);
   assert.deepEqual(entries[0].tools, []);
+  t.close();
   cleanup(dir);
 });
 
@@ -111,11 +126,12 @@ test('agentComplete emits agent:complete event with correct fields', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentComplete('sess-1', 'task-1', 'agent-1', { exitCode: 0, durationMs: 1234, outputTokens: 800 });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'agent:complete');
   assert.equal(entries[0].exitCode, 0);
   assert.equal(entries[0].durationMs, 1234);
   assert.equal(entries[0].outputTokens, 800);
+  t.close();
   cleanup(dir);
 });
 
@@ -123,10 +139,11 @@ test('agentComplete uses defaults for missing result', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentComplete('s', 't', 'a');
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].exitCode, 0);
   assert.equal(entries[0].durationMs, 0);
   assert.equal(entries[0].outputTokens, 0);
+  t.close();
   cleanup(dir);
 });
 
@@ -134,10 +151,11 @@ test('agentFail emits agent:fail event with correct fields', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentFail('sess-1', 'task-1', 'agent-1', { message: 'timeout', exitCode: 137 });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'agent:fail');
   assert.equal(entries[0].error, 'timeout');
   assert.equal(entries[0].exitCode, 137);
+  t.close();
   cleanup(dir);
 });
 
@@ -145,9 +163,10 @@ test('agentFail uses defaults for missing error', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.agentFail('s', 't', 'a');
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].error, 'unknown');
   assert.equal(entries[0].exitCode, 1);
+  t.close();
   cleanup(dir);
 });
 
@@ -155,11 +174,12 @@ test('waveStart emits wave:start event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.waveStart('sess-1', 0, 3);
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'wave:start');
   assert.equal(entries[0].sessionId, 'sess-1');
   assert.equal(entries[0].waveIndex, 0);
   assert.equal(entries[0].taskCount, 3);
+  t.close();
   cleanup(dir);
 });
 
@@ -167,11 +187,12 @@ test('waveComplete emits wave:complete event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.waveComplete('sess-1', 0, { completed: 2, failed: 1, durationMs: 5000 });
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'wave:complete');
   assert.equal(entries[0].completed, 2);
   assert.equal(entries[0].failed, 1);
   assert.equal(entries[0].durationMs, 5000);
+  t.close();
   cleanup(dir);
 });
 
@@ -179,10 +200,11 @@ test('waveComplete uses defaults for missing results', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.waveComplete('s', 0);
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].completed, 0);
   assert.equal(entries[0].failed, 0);
   assert.equal(entries[0].durationMs, 0);
+  t.close();
   cleanup(dir);
 });
 
@@ -190,10 +212,11 @@ test('phaseStart emits phase:start event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.phaseStart('sess-1', 2);
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'phase:start');
   assert.equal(entries[0].sessionId, 'sess-1');
   assert.equal(entries[0].phaseIndex, 2);
+  t.close();
   cleanup(dir);
 });
 
@@ -201,10 +224,11 @@ test('phaseEnd emits phase:end event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.phaseEnd('sess-1', 2, 'completed');
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'phase:end');
   assert.equal(entries[0].phaseIndex, 2);
   assert.equal(entries[0].status, 'completed');
+  t.close();
   cleanup(dir);
 });
 
@@ -212,11 +236,12 @@ test('commandClassified emits nyquist:classify event', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   t.commandClassified('rm -rf /', 'blocked', 'matches destructive pattern');
-  const entries = flushAndRead(t);
+  const entries = readCurrent(t);
   assert.equal(entries[0].type, 'nyquist:classify');
   assert.equal(entries[0].command, 'rm -rf /');
   assert.equal(entries[0].classification, 'blocked');
   assert.equal(entries[0].reason, 'matches destructive pattern');
+  t.close();
   cleanup(dir);
 });
 
@@ -228,7 +253,7 @@ test('rotation creates a new file when current exceeds maxFileSize', () => {
   const firstFile = t.currentFile;
   // Write enough to exceed 100 bytes
   t.emit({ type: 'big', data: 'x'.repeat(200) });
-  // Next emit should trigger rotation since file exceeds maxFileSize
+  // Next emit should trigger rotation since file > 100 bytes
   t.emit({ type: 'after-rotation' });
   const secondFile = t.currentFile;
   assert.notEqual(firstFile, secondFile);
@@ -252,8 +277,8 @@ test('rotation preserves old log files', () => {
 test('max files cleanup deletes oldest when limit reached', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir, maxFileSize: 50, maxFiles: 2 });
-  // Create several log files by writing and forcing rotation
-  for (let i = 0; i < 5; i++) {
+  // Create several log files by writing large events that trigger rotation
+  for (let i = 0; i < 6; i++) {
     t.emit({ type: 'fill', i, data: 'x'.repeat(100) });
   }
   t.close();
@@ -294,13 +319,13 @@ test('readAllLogs returns entries from all log files in chronological order', ()
   fs.writeFileSync(file1, JSON.stringify({ timestamp: '2025-01-01', type: 'first' }) + '\n');
   fs.writeFileSync(file2, JSON.stringify({ timestamp: '2025-01-02', type: 'second' }) + '\n');
   const t = new Telemetry({ logDir: dir });
-  t.close(); // close the auto-opened stream
   const entries = t.readAllLogs();
   assert.ok(entries.length >= 2);
   // Oldest should come first
   const firstIdx = entries.findIndex(e => e.type === 'first');
   const secondIdx = entries.findIndex(e => e.type === 'second');
   assert.ok(firstIdx < secondIdx, 'Entries should be in chronological order');
+  t.close();
   cleanup(dir);
 });
 
@@ -329,7 +354,7 @@ test('readSessionLogs returns empty array when no matching session', () => {
 
 // ── Close / cleanup ──────────────────────────────────────────────────────────
 
-test('close sets _closed flag', () => {
+test('close marks instance as closed', () => {
   const dir = makeTmpDir();
   const t = new Telemetry({ logDir: dir });
   assert.equal(t._closed, false);
@@ -355,10 +380,10 @@ test('_getLogFiles returns only telemetry JSONL files', () => {
   fs.writeFileSync(path.join(dir, 'other.txt'), '');
   fs.writeFileSync(path.join(dir, 'telemetry-bad.json'), '');
   const t = new Telemetry({ logDir: dir });
-  t.close();
   const files = t._getLogFiles();
   const nonTelemetry = files.filter(f => !f.startsWith('telemetry-') || !f.endsWith('.jsonl'));
   assert.equal(nonTelemetry.length, 0);
+  t.close();
   cleanup(dir);
 });
 
@@ -368,12 +393,12 @@ test('_getLogFiles returns newest first', () => {
   fs.writeFileSync(path.join(dir, 'telemetry-2025-06-15T12-00-00-000Z.jsonl'), '');
   fs.writeFileSync(path.join(dir, 'telemetry-2025-03-10T06-30-00-000Z.jsonl'), '');
   const t = new Telemetry({ logDir: dir });
-  t.close();
   const files = t._getLogFiles();
   // Filter to only the manually created ones (exclude the one constructor creates)
   const manual = files.filter(f => f.includes('2025-01') || f.includes('2025-06') || f.includes('2025-03'));
   assert.ok(manual[0].includes('2025-06'));
   assert.ok(manual[manual.length - 1].includes('2025-01'));
+  t.close();
   cleanup(dir);
 });
 
