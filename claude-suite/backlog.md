@@ -12,3 +12,11 @@
 ## Integrations
 - Direct Slack messaging for approval flows.
 - Jira ticket sync based on Requirement IDs mapping back to `.planning/REQUIREMENTS.md`.
+
+## Addressed by Phase 5 Skills
+- ~~Proactive security scanning~~ → `/audit` skill (Phase 5)
+- ~~Researcher Agent~~ → `/research` skill (Phase 5)
+- ~~Standalone verification~~ → `/verify` skill (Phase 5)
+- ~~Execution diagnostics~~ → `/diagnose` skill (Phase 5)
+- ~~Intelligent project onboarding~~ → `/init` skill (Phase 5)
+- ~~Cross-session retrospectives~~ → `/retro` skill (Phase 5)

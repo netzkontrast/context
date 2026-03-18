@@ -19,3 +19,11 @@
 ## Phase 4: Refinement
 - [x] Finalize the Truth Verification statistical thresholds.
 - [x] Validate automated end-to-end tests against project creation flows.
+
+## Phase 5: Skill Expansion
+- [x] Create `/audit` skill — proactive security scanning using Nyquist classification.
+- [x] Create `/research` skill — SQ3R deep-reading researcher for knowledge acquisition.
+- [x] Create `/diagnose` skill — telemetry and execution failure diagnostician.
+- [x] Create `/init` skill — intelligent project scaffolder with stack detection.
+- [x] Create `/verify` skill — standalone verification and quality gate with trend tracking.
+- [x] Create `/retro` skill — cross-session retrospective and learning extractor.
