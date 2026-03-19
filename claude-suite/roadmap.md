@@ -27,3 +27,7 @@
 - [x] Create `/init` skill — intelligent project scaffolder with stack detection.
 - [x] Create `/verify` skill — standalone verification and quality gate with trend tracking.
 - [x] Create `/retro` skill — cross-session retrospective and learning extractor.
+
+## Phase 6: Test Coverage Hardening
+- [x] Add comprehensive tests for `AgentOrchestrator` (constructor, planWaves, execute, wave execution, state writing, verification).
+- [x] Add comprehensive tests for `agent-runner.js` (env validation, output structure, MCP tools, Nyquist, permissions).
