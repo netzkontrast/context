@@ -3,14 +3,15 @@
 ## Mission
 Develop a minimal, yet highly interconnected "Claude Suite" inspired by `gsd`. The suite prioritizes a deterministic context engineering approach, separating the LLM reasoning loop from tool execution and state management via an `npx` installable command line interface.
 
-## Current Focus (Phase 4 Complete — All Phases Done)
-- Phases 1–4 are complete.
-- Phase 4 (Refinement) delivered:
-  - `TruthVerifier` class (`lib/truth-verifier.js`) with JSON-schema-like validation and statistical confidence scoring.
-  - Pre-configured `createAgentVerifier()` factory with `agent-report` (85% threshold) and `wave-result` (100% threshold) schemas.
-  - `AgentOrchestrator` now runs TruthVerifier on every agent JSON output; non-conforming outputs are rejected before updating state.
-  - 77 end-to-end tests across all core modules (`nyquist`, `mcp-registry`, `roadmap-parser`, `truth-verifier`) via `npm test`.
-  - `package.json` test script wired to Node's built-in `node:test` runner — zero additional dependencies.
+## Current Focus (Phase 6 Complete — All Phases Done)
+- Phases 1–6 are complete.
+- Phase 5 (Skill Expansion) delivered:
+  - Six new skills: `/audit`, `/research`, `/diagnose`, `/init`, `/verify`, `/retro`.
+  - Each skill has SKILL.md (YAML frontmatter + phased workflow), workflow diagram, and helper scripts.
+- Phase 6 (Test Coverage Hardening) delivered:
+  - Comprehensive tests for `AgentOrchestrator` (41 tests covering constructor, planWaves, execute, wave execution, state writing, verification, abort).
+  - Comprehensive tests for `agent-runner.js` (10 tests covering env validation, output structure, MCP tools, permissions).
+  - Total test count: 163 passing (up from 112).
 
 ## Principles
 1. Hexagonal architecture for API independence.
