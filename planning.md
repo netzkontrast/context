@@ -113,3 +113,39 @@ All foundational infrastructure is complete:
 | Telemetry JSONL files grow unbounded | Medium | Low | Implement log rotation (max 10MB per file, 5 files) |
 | parry/Dippy APIs change or become unavailable | Low | Medium | Abstract behind adapter interfaces (Hexagonal Architecture) |
 | Wave Execution deadlock on circular dependencies | Very Low | High | DAG construction already prevents cycles by design |
+
+### Phase 10 Execution Plan
+
+**Goal:** Integrate Software 3.0 architectures, specifically the Learning Distraction-Aware Retrieval (LDAR) and SQ3R methodology.
+
+#### Wave 1
+- [ ] Implement `lib/ldar-retriever.js` to replace naive semantic search, focusing on continuous similarity bands and noise filtering.
+- [ ] Define the SQ3R (Survey, Question, Read, Recite, Review) deterministic constraints for the Deep-Reading Agent.
+
+#### Wave 2
+- [ ] Integrate SQLite FTS5 backend strictly for Phase 1 (Survey) of SQ3R without ingesting raw body text.
+- [ ] Implement query formulation guidelines (Porter stemming, BM25 ranking) for Phase 2 and 3 of SQ3R.
+
+### Phase 11 Execution Plan
+
+**Goal:** Implement the Four-Tier Memory Model and Dolt/Beads distributed graph issue tracking.
+
+#### Wave 1
+- [ ] Design the Four-Tier Memory Model architecture (Core, Episodic, Semantic, Procedural).
+- [ ] Implement `lib/memory-manager.js` to route context based on the Four-Tier classification.
+
+#### Wave 2
+- [ ] Integrate Dolt as the version-controlled SQL backend for state persistence.
+- [ ] Implement the Beads framework adapter (`lib/beads-adapter.js`) for collision-resistant hash-based task tracking (e.g., `bd ready`, `bd update`).
+
+### Phase 12 Execution Plan
+
+**Goal:** Build Cognitive Coherence via Paraconsistent Logic and the Dual-System Cognitive Framework.
+
+#### Wave 1
+- [ ] Implement Dual-System Cognitive Framework (System 1: Heuristic/LDAR, System 2: Deliberate/Chain-of-Thought).
+- [ ] Design the Paraconsistent Logic handler to isolate and flag contradictory API/documentation states without failing the entire reasoning tree.
+
+#### Wave 2
+- [ ] Integrate Integrated Information Theory ($\Phi$) telemetry metrics to monitor context rot and cognitive coherence.
+- [ ] Design TSDP "Experience Replay" training loops for autonomous sub-agents to recover from First-Order and Second-Order learning failures.

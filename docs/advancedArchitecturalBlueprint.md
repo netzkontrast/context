@@ -144,3 +144,23 @@ Drawing from the exhaustive analysis of advanced agent repositories, protocol sp
 *   Test-Driven Development (TDD) for Agent Behavior: Agent interactions and swarm behaviors must be evaluated continuously, mimicking the rigor of traditional software TDD. Developers must build comprehensive evaluation datasets—maintaining a minimum of 30 distinct edge-case evaluation scenarios per agent persona—covering metrics such as output accuracy, reasoning trail logic, and tool-use success rates. The engineering team must implement automated End-to-End (E2E) tests that simulate full project initializations, mathematically ensuring the agent correctly navigates from PROJECT.md creation all the way to final user verification without suffering from goal deviation or context collapse.
 *   Configuration-Driven Design: Hard-coded operational parameters lead to highly brittle, inflexible systems that frustrate end-users. The suite must rely entirely on a central config.json (or .yaml) file that dictates critical workflow toggles, selects specific LLM model profiles (e.g., dynamically swapping from the computationally expensive Claude 3.5 Opus to the faster Haiku based solely on analyzed task complexity), and defines context depth limits. This design philosophy empowers end-users to precisely tune the system's financial token burn rate and physical execution speed without ever modifying the underlying source code.
 *   Security and Access Control: By definition, autonomous agents possess the technical capability to execute highly destructive system commands. Security cannot be an afterthought; it must be the foundational layer. The system must implement Abstract Syntax Tree (AST) parsing of all generated bash scripts and code blocks. This allows the suite to automatically approve explicitly safe, read-only commands (like ls or cat) while aggressively pausing system execution to enforce a mandatory, human-in-the-loop manual prompt for destructive operations (e.g., rm -rf, DROP TABLE, or external network POST requests). Security is maintained via heavily layered permissions, structurally treating the AI agent as a potentially hostile, untrusted actor operating entirely within a zero-trust execution sandbox.
+
+### State Persistence and Advanced Memory Topologies (LLM-OS Paradigm)
+
+To fully overcome multi-turn degradation, advanced agentic architectures deploy a mathematically defined **Four-Tier Memory Model** within an "LLM-as-an-Operating-System" (LLM-OS) structure:
+- **Core Memory**: The immediate, permanently in-context awareness containing personas and global constraints.
+- **Episodic Memory**: Vector-searched logs of the agent's historical decisions.
+- **Semantic Memory**: GraphRAG-based domains rules and topological facts.
+- **Procedural Memory**: Tool sequences and deployment workflows loaded on-demand.
+
+Concurrent parallel processes operate gracefully through the integration of the **Beads framework** and the version-controlled SQL database **Dolt**. Beads establishes Git-backed distributed graph issue tracking, using collision-resistant hash IDs and linking dependent tasks via structural dependencies (e.g., `blocks`, `supersedes`, `bd ready`) to allow "agent amnesia" recovery and self-healing Git histories.
+
+### Paraconsistent Logic and System Resilience
+
+As probability-driven agents ingest contradictory narratives and complex API specifications, systems are exposed to reasoning failures ("principle of explosion"). The architecture mathematically permits a localized anomaly by integrating **Paraconsistent Logic**. This allows the model to register a contradiction, isolating paradoxes from adjacent reasoning branches, enabling the agent to autonomously spawn parallel hypothesis tests without systemic coherence failure.
+
+### Integrated Information Theory ($\Phi$) and the NCP Framework
+
+In open-ended agentic workflows, true systemic coherence is evaluated using computational metrology based on **Integrated Information Theory (IIT)**. By calculating $\Phi$ (phi), the architecture quantifies the internal cause-effect integration of the multi-agent swarm. Sudden drops in $\Phi$ flag the onset of context rot, triggering context resets or sub-agent re-instantiation.
+
+Furthermore, generative logic generation is bridged via the **Narrative Context Protocol (NCP)**, which implements the Dramatica "Storyform" matrix. The NCP constrains an agent to explore creative and structural logic within a rigid thematic sandbox (Dynamics, Storypoints, Storybeats), evaluating causality rather than statistical word prediction to prevent narrative entropy over vast execution horizons.

@@ -35,3 +35,14 @@ To prevent "context rot" (up to 40% performance degradation per session):
 ## 7. Atomic Commits
 *   The ultimate measure of task completion is version control. Every successful execution cycle within the DAG must result in an immediate, isolated git commit.
 *   This pattern provides the AI suite with a high-fidelity "undo button," heavily relying on standard `git` operations for rapid bug reversion.
+
+## 8. Mitigating Multi-Turn Degradation
+To resolve "Lost in Conversation" patterns (Premature Answer Attempts, Verbosity Inflation, U-shaped recall), agents must strictly evaluate their own active reasoning path. All agents must enforce a `/clear` directive and perform a complete mathematical reset of their context window after every resolved execution graph node, entirely dropping legacy history to preserve token efficiency.
+
+## 9. The SQ3R Execution Pipeline (Deep-Reading Agents)
+When researching massive technical documentation or codebase architectures, agents must **NEVER** utilize standard bash commands like `cat`, `curl`, or `wget` to raw-read text into their context. Agents must adhere to the **SQ3R (Survey, Question, Read, Recite, Review)** cognitive pipeline:
+*   **Survey:** Extract structural boundaries (Tables of Contents) into SQLite FTS5 databases without reading body text.
+*   **Question:** Formulate 3-5 specific query strings using Porter stemming within the internal reasoning block.
+*   **Read:** Execute BM25 ranked searches to extract "smart snippets" limited to a maximum depth of 3 iterations.
+*   **Recite:** Synthesize retrieved findings into intermediate summaries answering the Phase 2 formulated questions.
+*   **Review:** Execute a context reset `/clear` upon finalizing the specification to purge intermediate search history.

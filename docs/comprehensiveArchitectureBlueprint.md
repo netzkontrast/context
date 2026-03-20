@@ -215,3 +215,12 @@ Deep-Reading and Context-Preserved Research Methodology
 4.  **Error Handling and Circuit Breaking**
     *   Context Saturation Warning: If a search invocation returns an anomaly indicating the resulting payload exceeds 5 KB, you must immediately refine the query with stricter, more specific parameters rather than forcing the ingestion into your context.
     *   Zero-Hit Queries: If the FTS5 database engine returns zero results, leverage the Levenshtein distance fallback by checking for typographical errors in your query string, or rely on broader trigram substring queries before abandoning the current search vector.
+
+### Advanced Retrieval Paradigms: Resolving the Context Quality Paradox
+As context windows expand massively, empirical evidence demonstrates a non-monotonic "Context Quality Paradox"—execution quality peaks at a mathematically low threshold of retrieved chunks and degrades significantly as input length expands. This fundamental architectural degradation of transformer-based attention is formalized as "Context Rot."
+
+To combat Attention Dilution, "Confident Confusion" (GPT models), "Conservative Collapse" (Claude models), and "Lost in Conversation" (multi-turn U-shaped recall), the system utilizes **Learning Distraction-Aware Retrieval (LDAR)** instead of naive RAG.
+LDAR relies on an auxiliary transformer to predict the lower and upper bounds of semantic similarity, dynamically selecting continuous "bands" of high-signal passages. This filters irrelevant "hard negatives" that trigger the distracting effect before data enters the LLM's primary cognitive engine, actively resolving the Context Quality Paradox and dramatically decreasing the token footprint.
+
+### The Epistemological Transition to "Software 3.0"
+This architectural design is fundamentally guided by the paradigm shift from deterministic authored logic to "Software 3.0," where LLMs function as probabilistic reasoning engines to orchestrate tools dynamically. This mandates an **Architecture of Intent**, wherein the system begins with natural language definitions of desired outcomes rather than static code bases, and deploys progressive schemas and highly cohesive bounded contexts to safely scale parallel operations without logic dilution.

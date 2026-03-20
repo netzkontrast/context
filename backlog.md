@@ -35,3 +35,9 @@
 - GitHub Actions CI/CD pipeline with test gates.
 - Webhook notifications for phase completion events.
 - VS Code extension for in-editor wave execution monitoring.
+
+## High-Coherence Agentic Frameworks (Software 3.0)
+- **Advanced Paraconsistent Logic Handlers:** Formalize the integration of neuro-symbolic methods to evaluate conflicting constraints, allowing the system to isolate and flag paradoxical code or API documentation without triggering catastrophic reasoning failure.
+- **Integrated Information Theory ($\Phi$) Metrics:** Implement live computational metrology based on IIT and the Free Energy Principle (FEP-AI) to actively monitor the spatial, temporal, and causal coherence of the multi-agent swarm, providing an early-warning telemetry metric for context rot.
+- **TSDP-Based "Experience Replay" Training:** Design self-healing "therapy" loops for models experiencing Second-Order Learning (dissociative) failures, utilizing balanced ratios of trauma examples and safe examples to update meta-weights without catastrophic forgetting.
+- **Narrative Context Protocol (NCP) Sandbox:** Integrate the Dramatica Storyform structure for expansive, non-contradictory narrative workflows, supporting Storyforming, Story Encoding, and Storyweaving agents.
