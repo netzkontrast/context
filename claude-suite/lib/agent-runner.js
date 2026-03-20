@@ -18,12 +18,15 @@
 
 const { createFileSystemRegistry } = require('./mcp-registry');
 const { classifyCommand, CLASSIFICATION } = require('./nyquist');
+const { registry: personaRegistry } = require('./personas');
+const { SkillLoader } = require('./skill-loader');
 
 const taskId = process.env.SUITE_TASK_ID;
 const taskDescription = process.env.SUITE_TASK_DESCRIPTION;
 const rawContext = process.env.SUITE_CONTEXT;
 const skipPermissions = process.env.SUITE_SKIP_PERMISSIONS === '1';
 const basePath = process.env.SUITE_BASE_PATH || process.cwd();
+const personaId = process.env.SUITE_PERSONA || 'executor';
 
 if (!taskId || !taskDescription) {
   console.error('Missing required environment: SUITE_TASK_ID, SUITE_TASK_DESCRIPTION');
@@ -41,6 +44,17 @@ try {
 // Initialize MCP tools scoped to the project sandbox
 const mcpTools = createFileSystemRegistry(basePath);
 
+// Resolve persona
+const persona = personaRegistry.get(personaId) || personaRegistry.get('executor');
+
+// Discover matching skill (best-effort)
+let loadedSkill = null;
+try {
+  const loader = new SkillLoader(basePath);
+  loader.discover();
+  loadedSkill = loader.get(persona.id) || null;
+} catch { /* skill discovery is optional */ }
+
 // Report what this agent received and its capabilities
 const report = {
   agentId: taskId,
@@ -50,8 +64,10 @@ const report = {
   mcpTools: mcpTools.list().map(t => t.name),
   nyquistEnabled: true,
   skipPermissions,
+  persona: { id: persona.id, role: persona.role, contextBudget: persona.contextBudget },
+  skill: loadedSkill ? loadedSkill.manifest.name : null,
   status: 'ready',
-  message: `Agent for "${taskDescription}" spawned with sterile context, ${mcpTools.list().length} MCP tools, and Nyquist verification.`,
+  message: `Agent for "${taskDescription}" spawned with sterile context, ${mcpTools.list().length} MCP tools, Nyquist verification, and persona: ${persona.role}.`,
 };
 
 console.log(JSON.stringify(report));
