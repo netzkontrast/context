@@ -2,31 +2,69 @@
 
 *Comprehensive execution plan and current state tracking.*
 
-## Status: Phase 5 — Persistence & Context Intelligence
+## Status: Phase 10 — Agentic System Architecture
 
-### What's Done (Phases 0-4)
+### What's Done (Phases 0-5 partial)
 All foundational infrastructure is complete:
 - CLI framework with 6 commands (Commander.js)
 - Agent Orchestrator with Wave Execution and DAG planning
 - MCP Registry with 6 sandboxed filesystem tools
 - Nyquist Layer with 33 safe commands, 15 blocked patterns
 - TruthVerifier with confidence scoring (0.8 default threshold)
-- 77 passing tests across 4 suites, zero external test deps
-- ~1,100 lines of source code, 1 production dependency
+- SQLite ContextStore with FTS5, WAL mode, audit log, token budget estimator
+- JSONL Telemetry with 10MB rotation and 5-file retention
+- AgentOrchestrator integrated with ContextStore and Telemetry (graceful degradation)
+- 265 passing tests across 11 suites
+- `better-sqlite3` promoted to production dependency
 
-### Phase 5 Execution Plan
+### Phase 10 Execution Plan
 
-**Goal:** Replace pure Markdown state management with SQLite persistence while keeping Markdown as the human-readable interface.
+**Goal:** Implement agentic system architecture primitives from the *Strategic Research Roadmap: Engineering the Architecture of Intent* (2025): LDAR, Knowledge Graph, and Coherence Monitor.
 
-#### Wave 1 (Parallel — no dependencies)
-- [ ] Design SQLite schema: `sessions`, `executions`, `telemetry`, `context_snapshots` tables
-- [ ] Design JSONL telemetry format: agent spawns, token counts, durations, exit codes
-- [ ] Research SQLite FTS5 API for Node.js (better-sqlite3 vs sql.js — decision: **better-sqlite3** for performance, synchronous API, zero-config)
+#### Wave 1 — Core Primitives (COMPLETE)
+- [x] `lib/ldar.js` — Learning Distraction-Aware Retrieval
+  - Adaptive band selection over FTS5 BM25 results (narrow-cluster / wide-penalised / floor-applied)
+  - Distractor pattern penalty for narrative connectives and filler content
+  - `assessCUE()` — Context Utilisation Efficiency with 12-chunk rot threshold
+  - 20 tests covering all retrieval modes, session scoping, and edge cases
+- [x] `lib/knowledge-graph.js` — Entity-Edge Knowledge Graph (SQLite-backed)
+  - EntityNode schema: `node_id`, `type` (File/Function/Class/Requirement/Decision), `content_hash`, `metadata`
+  - EntityEdge schema: `source_id`, `target_id`, `relationship` (IMPLEMENTS/DEPENDS_ON/MODIFIES/OBSOLETES/TESTS)
+  - Dependency centrality scoring, ContextRelevanceScore (40/30/20/10 weight split)
+  - `registerRefactor()` — OBSOLETES + IMPLEMENTS edges on function refactor
+  - Multi-hop BFS traversal, stats, full CRUD
+  - 26 tests across 7 suites
+- [x] `lib/coherence-monitor.js` — IIT Phi-inspired coherence tracking
+  - Detects CONSERVATIVE_COLLAPSE, VERBOSITY_INFLATION, PREMATURE_COMMITMENT, RAPID_FLAKINESS
+  - `assess()` → `{ phi, failureMode, rotRisk, warning, metrics }`
+  - `distill()` → compressed Markdown episodic snapshot (< 500 tokens)
+  - `clearSession()` — context eviction after distillation
+  - 17 tests including pattern matching and boundary conditions
 
-#### Wave 2 (Depends on Wave 1)
-- [ ] Implement `lib/context-store.js` — SQLite adapter with FTS5 virtual table
-- [ ] Implement `lib/telemetry.js` — JSONL writer with rotation and structured events
-- [ ] Add `context-store` and `telemetry` as MCP tools in the registry
+#### Wave 2 — Integration (Next)
+- [ ] Wire LDAR into Researcher Agent (Phase 6 Wave 3): replace raw FTS5 calls with `ldar.retrieve()`
+- [ ] Wire KnowledgeGraph into AgentOrchestrator: register task DAG nodes as entities; add IMPLEMENTS edges on completion
+- [ ] Wire CoherenceMonitor into session lifecycle: Phi snapshots pushed to Telemetry; wave halted on `rotRisk === 'critical'`
+- [ ] `claude-suite graph` CLI command: `list`, `show <node-id>`, `traverse <node-id>`, `stats`
+- [ ] Paraconsistent conflict flagging in ContextStore: `detectContradiction(sessionId, key)` using FTS5 co-occurrence
+
+#### Wave 3 — Context Distillation Pipeline (After Wave 2)
+- [ ] Auto-compress at 80% token budget: invoke `ldar.retrieve()` → `coherenceMonitor.distill()` → `store.saveSnapshot()`
+- [ ] SQ3R pipeline runner: Survey → Question → Read (LDAR) → Recite (distill) → Review (clear) for Researcher Agent
+- [ ] Session replay CLI: `claude-suite replay <session-id>` reconstructs execution from ContextStore
+
+### Phase 5 Remaining Execution Plan
+
+**Goal:** Complete Phase 5 stragglers before Phase 6 agent persona work.
+
+#### Wave 3 (Depends on Wave 1-2, already complete)
+- [x] Integrate context store into AgentOrchestrator (write execution results to SQLite)
+- [ ] Implement session replay CLI command: `claude-suite replay <session-id>`
+
+#### Wave 4
+- [x] Context budget calculator: `estimateTokens` and `getSessionTokenBudget` in ContextStore
+- [ ] Add `search` CLI command: full-text search across all project memory
+- [ ] Write tests for context-store, telemetry, and replay (target: 30+ new tests)
 
 #### Wave 3 (Depends on Wave 2)
 - [ ] Integrate context store into AgentOrchestrator (write execution results to SQLite)
@@ -53,7 +91,7 @@ All foundational infrastructure is complete:
 - [ ] Implement Verifier Agent persona — test runner + fix plan generator
 
 #### Wave 3 (Depends on Wave 2)
-- [ ] Implement Researcher Agent — SQ3R Deep-Reading for large docs
+- [ ] Implement Researcher Agent — SQ3R Deep-Reading for large docs (use `ldar.retrieve()` from Phase 10)
 - [ ] Add `personas` CLI command to list/inspect agent personas
 - [ ] Wire persona selection into AgentOrchestrator task dispatch
 
