@@ -2,17 +2,21 @@
 
 *Comprehensive execution plan and current state tracking.*
 
-## Status: Phase 5 — Persistence & Context Intelligence
+## Status: Phase 7 — Security Hardening & Hooks (next)
 
-### What's Done (Phases 0-4)
+### What's Done (Phases 0-6)
 All foundational infrastructure is complete:
-- CLI framework with 6 commands (Commander.js)
+- CLI framework with 8 commands (Commander.js): install, new-project, plan-phase, execute-phase, mcp-tools, verify, search, replay, sessions, budget, personas, skills
 - Agent Orchestrator with Wave Execution and DAG planning
 - MCP Registry with 6 sandboxed filesystem tools
 - Nyquist Layer with 33 safe commands, 15 blocked patterns
 - TruthVerifier with confidence scoring (0.8 default threshold)
-- 77 passing tests across 4 suites, zero external test deps
-- ~1,100 lines of source code, 1 production dependency
+- SQLite context store (FTS5) and JSONL telemetry
+- PersonaRegistry with 4 built-in personas (Planner, Executor, Verifier, Researcher)
+- SkillLoader with YAML front-matter parser and progressive disclosure
+- Persona routing wired into AgentOrchestrator and agent-runner subprocess
+- 231 passing tests across 8 suites (context-store pre-existing failure: needs better-sqlite3)
+- ~1,800 lines of source code, 2 production dependencies
 
 ### Phase 5 Execution Plan
 

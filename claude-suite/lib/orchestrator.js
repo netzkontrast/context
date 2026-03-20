@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { verifyCommands, CLASSIFICATION } = require('./nyquist');
 const { createAgentVerifier } = require('./truth-verifier');
+const { registry: personaRegistry } = require('./personas');
 
 /**
  * AgentOrchestrator manages the lifecycle of wave-based task execution.
@@ -232,6 +233,7 @@ class AgentOrchestrator extends EventEmitter {
           SUITE_CONTEXT: JSON.stringify(context),
           SUITE_SKIP_PERMISSIONS: this.skipPermissions ? '1' : '0',
           SUITE_BASE_PATH: this.basePath,
+          SUITE_PERSONA: context.persona ? context.persona.id : 'executor',
         },
         stdio: ['pipe', 'pipe', 'pipe'],
         timeout: 300000, // 5 minute timeout per agent
@@ -303,10 +305,12 @@ class AgentOrchestrator extends EventEmitter {
    * Only includes what the agent needs for its specific task.
    */
   _buildSterileContext(task) {
+    const persona = personaRegistry.selectForTask(task.description);
     const context = {
       task: task.description,
       constraints: null,
       requirements: null,
+      persona: { id: persona.id, role: persona.role, contextBudget: persona.contextBudget },
     };
 
     // Load PROJECT.md constraints if available

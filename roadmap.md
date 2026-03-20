@@ -35,12 +35,12 @@ Construct an autonomous Claude Suite developer toolkit using deterministic conte
 - [ ] Context budget calculator — estimate token cost before spawning agents
 
 ### Phase 6: Agent Ecosystem & Skills (Weeks 3-4)
-- [ ] Planner Agent — generates validated execution plans from requirements
-- [ ] Executor Agent — implements single tasks within sterile context windows
-- [ ] Verifier Agent — runs test suites and produces actionable fix plans
-- [ ] Researcher Agent — SQ3R Deep-Reading methodology for large documentation
-- [ ] Skill manifest format (YAML/Markdown) with progressive disclosure loading
-- [ ] Agent persona registry with capability declarations
+- [x] Planner Agent — generates validated execution plans from requirements
+- [x] Executor Agent — implements single tasks within sterile context windows
+- [x] Verifier Agent — runs test suites and produces actionable fix plans
+- [x] Researcher Agent — SQ3R Deep-Reading methodology for large documentation
+- [x] Skill manifest format (YAML/Markdown) with progressive disclosure loading
+- [x] Agent persona registry with capability declarations
 
 ### Phase 7: Security Hardening & Hooks (Weeks 5-6)
 - [ ] OS-level deterministic hooks: PreToolUse, PostToolUse, End-of-turn
