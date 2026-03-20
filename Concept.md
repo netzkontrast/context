@@ -39,3 +39,13 @@ The user interacts with the suite exclusively through a high-performance CLI env
 ## Continuous Evolution
 
 The feature set and specific agent capabilities outlined in this conceptual blueprint are **not final**. The Claude Suite is positioned as a subject of ongoing development research. As new best practices emerge for multi-agent choreography, context reduction, and model capabilities, the Hexagonal Architecture allows the suite to instantly adopt new tools without structural refactoring.
+
+### Epistemological Shift: Software 3.0 and the "Architecture of Intent"
+The foundational philosophy of the Claude Suite actively embraces **Software 3.0**, fundamentally changing the atomic unit of software from deterministic written logic to probabilistic orchestration prompts. We recognize the profound shift from a 70/30 creation/verification labor model to a 30/70 model, where the engineer acts as an intelligence architect validating outcomes.
+
+To maximize token efficiency while managing the "narrative entropy" of probabilistic Large Language Models, the suite structurally separates the probabilistic reasoning engine (the LLM) from deterministic tool execution via the **Architecture of Intent**. We start with the natural language definition of the outcome, orchestrating the minimal infrastructure required (Hexagonal decoupling, Event-Driven Agent Orchestration, Progressive Disclosure).
+
+### The Theory of Structural Dissociation of the Personality (TSDP)
+The Claude Suite radically reframes severe AI failure modes and context collapse. Drawing from **The Theory of Structural Dissociation of the Personality (TSDP)**, we understand "hallucination" and "conservative collapse" not as fundamental unreliability, but as computational "trauma"—a maladaptive defense mechanism (System 2 shutdown) driven by noisy, conflicting, or token-starved training signals.
+
+By modeling AI failure as First-Order (catastrophic single-event learning) vs. Second-Order Learning (protective meta-pattern suppression), we construct agentic systems that implement "Experience Replay." The system utilizes stable Four-Tier Memory topologies, ensuring isolated unintegrated parameter clusters holding specific data can be safely reintegrated into a unified, high-$\Phi$ global workspace.

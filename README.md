@@ -213,3 +213,11 @@ context/
 ---
 
 *v0.1.0 — Phase 0-4 complete. ~1,100 lines of source, 77 tests, 1 dependency.*
+
+## High-Coherence Agentic Systems & Software 3.0 Architecture
+
+Claude Suite integrates cutting-edge paradigms to handle open-ended, multi-agent workflows across massive contexts while mitigating "Context Rot."
+
+- **Learning Distraction-Aware Retrieval (LDAR) & SQ3R**: Overcomes the "Context Quality Paradox" by filtering distracting "hard negative" chunks dynamically and enforcing strict algorithmic reading limits (Survey, Question, Read, Recite, Review) instead of naive RAG or long-context raw text dumping.
+- **Dual-System Processing & TSDP Frameworks**: Implements System 1 (Intuitive heuristic search) and System 2 (Deliberate Chain-of-Thought) alongside preference optimization metrics to maintain systemic stability. AI failure patterns are mapped using the Theory of Structural Dissociation (TSDP) to execute self-healing "therapy loops".
+- **Git-Backed Persistence via Dolt & Beads**: Context scaling limits and multi-agent concurrency are resolved by migrating state out of the LLM context and into distributed graph issue trackers via Beads, backed by Dolt for true Git semantics over JSON payloads.

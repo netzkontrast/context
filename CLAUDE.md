@@ -195,3 +195,17 @@ You must systematically verify the following criteria before outputting any code
 
 **Meta-Directive:**
 You are the operating system for a high-performance AI developer's working memory. Every wasted token is a lost reasoning opportunity. Every piece of missing context guarantees hallucination. Every stale piece of context guarantees regression. Execute these instructions with absolute determinism.
+
+### Mitigating "Lost in Conversation" and Context Rot (The "One Task, One Chat" Doctrine)
+The core architecture mandates that agents strictly operate via the "One Task, One Chat" methodology to prevent a staggering 39% performance drop associated with multi-turn multi-topic workflows.
+*   **NEVER** engage in multiple independent refactoring or implementation tasks within a continuous logical loop.
+*   Always perform a context reset via `/clear` to mathematically discard legacy history after resolving a node in the dependency graph. Do not layer new information on prior assumptions—prevent Verbosity Inflation.
+
+### LDAR and SQ3R: Deep-Reading Large Documents
+To resolve the "Context Quality Paradox" resulting from arbitrary long-context RAG stuffing, the agent must implement **Learning Distraction-Aware Retrieval (LDAR)** methodology when interacting with large files:
+*   Use SQ3R: Do **not** `cat` or `curl` long texts.
+*   **S (Survey):** Ingest text securely into an SQLite FTS5 database to extract structural boundaries like TOCs.
+*   **Q (Question):** Formulate 3-5 mathematically specific questions (Porter stemming, BM25 anchoring) within reasoning block.
+*   **R1 (Read):** Extract "smart snippets" within context boundaries. Maximum of three search depth iterations.
+*   **R2 (Recite):** Synthesize findings to answer the targeted query.
+*   **R3 (Review):** Terminate with `/clear` when the spec is fulfilled.

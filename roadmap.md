@@ -67,6 +67,21 @@ Construct an autonomous Claude Suite developer toolkit using deterministic conte
 - [ ] Multi-project orchestration — single suite managing multiple repositories
 - [ ] Agent performance benchmarking and adaptive concurrency tuning
 
+### Phase 10: Software 3.0 Integration & LDAR Framework (Weeks 11-12)
+- [ ] Implement Learning Distraction-Aware Retrieval (LDAR) for noise-filtered context retrieval.
+- [ ] Enforce deterministic SQ3R cognitive pipelines for deep-reading large documentations without context rot.
+- [ ] Establish "Architecture of Intent" utilizing schema-guided dialogues and progressive disclosure to preserve context window capacity.
+
+### Phase 11: Enterprise Gateway & Advanced Memory Topologies (Weeks 13-14)
+- [ ] Integrate Bifrost MCP Gateway for Code Mode orchestration, drastically reducing token consumption and exposing meta-tools (`listToolFiles`, `readToolFile`, `executeToolCode`).
+- [ ] Implement the Four-Tier Memory Model (Core, Episodic, Semantic, Procedural) to manage state efficiently.
+- [ ] Integrate Dolt and Beads distributed graph issue tracking for Git-backed agentic state persistence and parallel branch execution.
+
+### Phase 12: Cognitive Coherence & System Resilience (Weeks 15-16)
+- [ ] Implement Paraconsistent Logic interpreters to manage inherently contradictory documentation and API specifications without catastrophic reasoning failure.
+- [ ] Adopt Integrated Information Theory (IIT) to quantify $\Phi$ (phi) cognitive coherence metrics and detect context rot early.
+- [ ] Utilize the Theory of Structural Dissociation of the Personality (TSDP) to diagnose training data problems (First-Order vs. Second-Order learning).
+- [ ] Integrate the Narrative Context Protocol (NCP) to maintain teleological trajectories in multi-agent workflows.
 ### Phase 10: Agentic System Architecture — LDAR, Knowledge Graph & Coherence (Weeks 11-12)
 *Grounded in the Strategic Research Roadmap: Engineering the Architecture of Intent (2025).*
 - [x] `lib/ldar.js` — Learning Distraction-Aware Retrieval: adaptive band selection over FTS5, distractor penalty, CUE assessment
