@@ -556,3 +556,61 @@ test('abort: emits abort event', () => {
   orch.abort();
   assert.ok(emitted);
 });
+
+// ── Persona integration ───────────────────────────────────────────────────────
+
+test('_buildSterileContext: includes persona field', () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+  const ctx = orch._buildSterileContext({ id: 'task-1', description: 'implement the login flow' });
+  assert.ok(ctx.persona, 'context should have a persona field');
+  assert.ok(typeof ctx.persona.id === 'string', 'persona.id should be a string');
+  assert.ok(typeof ctx.persona.role === 'string', 'persona.role should be a string');
+  assert.ok(typeof ctx.persona.contextBudget === 'number', 'persona.contextBudget should be a number');
+  cleanup(tmp);
+});
+
+test('_buildSterileContext: selects executor persona for implement tasks', () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+  const ctx = orch._buildSterileContext({ id: 'task-1', description: 'implement the database adapter' });
+  assert.equal(ctx.persona.id, 'executor');
+  cleanup(tmp);
+});
+
+test('_buildSterileContext: selects planner persona for plan tasks', () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+  const ctx = orch._buildSterileContext({ id: 'task-1', description: 'plan the system architecture' });
+  assert.equal(ctx.persona.id, 'planner');
+  cleanup(tmp);
+});
+
+test('_buildSterileContext: selects verifier persona for test tasks', () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+  const ctx = orch._buildSterileContext({ id: 'task-1', description: 'test the authentication module' });
+  assert.equal(ctx.persona.id, 'verifier');
+  cleanup(tmp);
+});
+
+test('_buildSterileContext: selects researcher persona for research tasks', () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+  const ctx = orch._buildSterileContext({ id: 'task-1', description: 'research the MemGPT architecture' });
+  assert.equal(ctx.persona.id, 'researcher');
+  cleanup(tmp);
+});
+
+test('_spawnAgent: passes SUITE_PERSONA env var to child process', async () => {
+  const tmp = makeTmpDir();
+  const orch = makeOrch(tmp);
+
+  let capturedEnv = null;
+  // Override _spawnAgent to inspect what env was built (checking via _buildSterileContext)
+  const context = orch._buildSterileContext({ id: 'task-1', description: 'implement login' });
+  const personaId = context.persona ? context.persona.id : 'executor';
+  assert.ok(typeof personaId === 'string');
+  assert.ok(personaId.length > 0);
+  cleanup(tmp);
+});

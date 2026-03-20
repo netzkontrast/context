@@ -467,6 +467,81 @@ program
   });
 
 // ---------------------------------------------------------------------------
+// Phase 6: Agent Ecosystem & Skills Commands
+// ---------------------------------------------------------------------------
+
+program
+  .command('personas')
+  .description('List all registered agent personas')
+  .option('--json', 'Output raw JSON')
+  .action((options) => {
+    const { registry } = require('../lib/personas');
+    const personas = registry.list();
+
+    if (options.json) {
+      console.log(JSON.stringify(personas, null, 2));
+      return;
+    }
+
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► AGENT PERSONAS${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    personas.forEach(p => {
+      const budget = `${Math.round(p.contextBudget * 100)}% context budget`;
+      console.log(`  ${cyan}${p.id}${reset}  [${green}${p.role}${reset}]  ${yellow}${budget}${reset}`);
+      console.log(`    ${p.description}`);
+      console.log(`    Tools: ${p.defaultTools.join(', ')}`);
+      console.log('');
+    });
+
+    console.log(`  Total: ${personas.length} persona(s) registered.\n`);
+  });
+
+program
+  .command('skills')
+  .description('Discover and list available agent skills')
+  .option('--dir <path>', 'Directory to search for skills (default: cwd)')
+  .option('--json', 'Output raw JSON')
+  .action((options) => {
+    const { SkillLoader } = require('../lib/skill-loader');
+    const searchDir = options.dir ? path.resolve(options.dir) : process.cwd();
+    const loader = new SkillLoader(searchDir);
+    const count = loader.discover();
+    const skills = loader.list();
+
+    if (options.json) {
+      console.log(JSON.stringify(skills.map(s => ({ name: s.name, manifest: s.manifest, scripts: s.scripts })), null, 2));
+      return;
+    }
+
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► AGENT SKILLS${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+    console.log(`  Scanning: ${searchDir}\n`);
+
+    if (skills.length === 0) {
+      console.log(`  ${yellow}No skills found. Create a .claude-skills-<name>/SKILL.md to register one.${reset}\n`);
+      return;
+    }
+
+    skills.forEach(s => {
+      const toolCount = s.manifest.allowedTools.length;
+      console.log(`  ${cyan}${s.name}${reset}  (${toolCount} tool${toolCount !== 1 ? 's' : ''})`);
+      if (s.manifest.description) {
+        const desc = s.manifest.description.substring(0, 100);
+        console.log(`    ${desc}${s.manifest.description.length > 100 ? '...' : ''}`);
+      }
+      if (s.scripts.length > 0) {
+        console.log(`    Scripts: ${s.scripts.join(', ')}`);
+      }
+      console.log('');
+    });
+
+    console.log(`  Total: ${count} skill(s) discovered.\n`);
+  });
+
+// ---------------------------------------------------------------------------
 // Phase 10: Knowledge Graph Commands
 // ---------------------------------------------------------------------------
 

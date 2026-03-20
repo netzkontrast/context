@@ -2,20 +2,24 @@
 
 *Comprehensive execution plan and current state tracking.*
 
-## Status: Phase 10 — Agentic System Architecture
+## Status: Phase 10 — Agentic System Architecture (Phase 7 next after merge)
 
-### What's Done (Phases 0-5 partial)
+### What's Done (Phases 0-6 + Phase 10 Wave 1-2)
 All foundational infrastructure is complete:
-- CLI framework with 6 commands (Commander.js)
+- CLI framework with 14 commands (Commander.js): install, new-project, plan-phase, execute-phase, mcp-tools, verify, search, replay, sessions, budget, personas, skills, graph
 - Agent Orchestrator with Wave Execution and DAG planning
 - MCP Registry with 6 sandboxed filesystem tools
 - Nyquist Layer with 33 safe commands, 15 blocked patterns
 - TruthVerifier with confidence scoring (0.8 default threshold)
-- SQLite ContextStore with FTS5, WAL mode, audit log, token budget estimator
+- SQLite ContextStore with FTS5, WAL mode, audit log, token budget estimator, contradiction detection
 - JSONL Telemetry with 10MB rotation and 5-file retention
-- AgentOrchestrator integrated with ContextStore and Telemetry (graceful degradation)
-- 265 passing tests across 11 suites
-- `better-sqlite3` promoted to production dependency
+- AgentOrchestrator integrated with ContextStore, Telemetry, KnowledgeGraph, and CoherenceMonitor
+- PersonaRegistry with 4 built-in personas (Planner, Executor, Verifier, Researcher)
+- SkillLoader with YAML front-matter parser and progressive disclosure
+- Persona routing wired into AgentOrchestrator and agent-runner subprocess
+- LDAR, KnowledgeGraph, CoherenceMonitor, SQ3R pipeline (Phase 10)
+- 308 passing tests across 14 suites
+- `better-sqlite3` promoted to production dependency; ~2,500 lines of source code
 
 ### Phase 10 Execution Plan
 
