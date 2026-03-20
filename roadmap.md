@@ -24,15 +24,18 @@ Construct an autonomous Claude Suite developer toolkit using deterministic conte
   - MCP filesystem tools (read/write/list/delete/append/exists), sandbox isolation, command classification
 - [x] **Phase 4:** Truth Verification & Testing
   - TruthVerifier with confidence scoring, 77 end-to-end tests, `agent-report` and `wave-result` schemas
+- [x] **Phase 5 (partial):** Persistence & Context Intelligence — Core
+  - SQLite-backed ContextStore with FTS5 full-text search and audit log
+  - JSONL Telemetry with 10MB rotation and 5-file retention
+  - Context token budget estimator (`estimateTokens`, `getSessionTokenBudget`)
+  - AgentOrchestrator integrated with ContextStore and Telemetry
 
 ## Upcoming Phases
 
-### Phase 5: Persistence & Context Intelligence (Weeks 1-2)
-- [ ] SQLite-backed context store replacing pure Markdown state management
-- [ ] FTS5 full-text search across project memory (PROJECT, ROADMAP, REQUIREMENTS, STATE)
-- [ ] JSONL telemetry logging for token consumption and agent execution traces
-- [ ] Session replay — reconstruct any past execution from telemetry logs
-- [ ] Context budget calculator — estimate token cost before spawning agents
+### Phase 5: Persistence & Context Intelligence — Remaining (Weeks 1-2)
+- [ ] Session replay CLI command: `claude-suite replay <session-id>`
+- [ ] `search` CLI command: full-text search across all project memory
+- [ ] 30+ additional tests for context-store, telemetry, and replay
 
 ### Phase 6: Agent Ecosystem & Skills (Weeks 3-4)
 - [x] Planner Agent — generates validated execution plans from requirements
@@ -63,3 +66,23 @@ Construct an autonomous Claude Suite developer toolkit using deterministic conte
 - [ ] Code Digital Twins — shadow execution environment for pre-validation
 - [ ] Multi-project orchestration — single suite managing multiple repositories
 - [ ] Agent performance benchmarking and adaptive concurrency tuning
+
+### Phase 10: Agentic System Architecture — LDAR, Knowledge Graph & Coherence (Weeks 11-12)
+*Grounded in the Strategic Research Roadmap: Engineering the Architecture of Intent (2025).*
+- [x] `lib/ldar.js` — Learning Distraction-Aware Retrieval: adaptive band selection over FTS5, distractor penalty, CUE assessment
+- [x] `lib/knowledge-graph.js` — Entity-Edge Knowledge Graph: File/Function/Class/Requirement/Decision nodes; IMPLEMENTS/DEPENDS_ON/MODIFIES/OBSOLETES/TESTS edges; centrality scoring; ContextRelevanceScore; multi-hop BFS traversal
+- [x] `lib/coherence-monitor.js` — IIT Phi-inspired coherence tracking: CONSERVATIVE_COLLAPSE, VERBOSE_INFLATION, PREMATURE_COMMITMENT detection; distillation snapshots; rot-risk classification
+- [x] `lib/sq3r.js` — SQ3R pipeline: Survey (structure extraction) → Question (3–5 anchored queries) → Read (LDAR, max 3 iterations) → Recite (distilled Markdown summary) → Review (ContextStore + audit event + clear)
+- [x] Wire KnowledgeGraph into AgentOrchestrator: session as Decision node; tasks as Requirement nodes; DEPENDS_ON + IMPLEMENTS edges tracked
+- [x] Wire CoherenceMonitor into session lifecycle: Phi check post-wave; critical rot halts execution; distillation snapshot persisted; `coherence:phi` telemetry events emitted
+- [x] `claude-suite graph` CLI command: `list [--type]`, `show <node-id>`, `traverse <node-id> [--rel] [--depth]`, `stats`
+- [x] Paraconsistent conflict detection: `ContextStore.detectContradiction(sessionId, key, threshold)` — trigram dissimilarity; returns conflict pairs with scores; no silent synthesis
+- [ ] Context Distillation pipeline: auto-compress session memory at 80% token budget (hook into `_buildSterileContext`)
+
+### Phase 11: MCP Gateway & Code Mode Orchestration (Weeks 13-14)
+*Implements Bifrost Gateway pattern from the Architecture of Intent research.*
+- [ ] MCP Gateway adapter: centralized control plane exposing `listToolFiles`, `readToolFile`, `executeToolCode` meta-tools
+- [ ] Schema-on-demand: hide raw tool schemas from agent context; disclose only on explicit `readToolFile` call
+- [ ] TypeScript workflow executor: agents generate single executable workflow instead of multi-turn ping-pong
+- [ ] Gateway audit log: per-consumer tool filtering, cost tracking, and deterministic sandbox execution
+- [ ] Token overhead comparison benchmark: prompt-based vs Code Mode orchestration (~50% reduction target)

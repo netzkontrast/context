@@ -40,6 +40,18 @@ class AgentOrchestrator extends EventEmitter {
       const { ContextStore } = require('./context-store');
       this._contextStore = new ContextStore({ dbPath: path.join(this.suitePath, 'context.db') });
     } catch { /* context-store not available */ }
+
+    // Optional Phase 10 integrations (graceful degradation)
+    this._knowledgeGraph = null;
+    this._coherenceMonitor = null;
+    try {
+      const { KnowledgeGraph } = require('./knowledge-graph');
+      this._knowledgeGraph = new KnowledgeGraph({ dbPath: path.join(this.suitePath, 'graph.db') });
+    } catch { /* knowledge-graph not available */ }
+    try {
+      const { CoherenceMonitor } = require('./coherence-monitor');
+      this._coherenceMonitor = new CoherenceMonitor();
+    } catch { /* coherence-monitor not available */ }
   }
 
   /**
@@ -93,6 +105,18 @@ class AgentOrchestrator extends EventEmitter {
       } catch { /* best-effort */ }
     }
 
+    // Register phase as a Decision node in the Knowledge Graph
+    if (this._knowledgeGraph) {
+      try {
+        this._knowledgeGraph.upsertNode({
+          node_id: `session:${sessionId}`,
+          type: 'Decision',
+          content_hash: sessionId,
+          metadata: { phase: phase.label, status: 'running' },
+        });
+      } catch { /* best-effort */ }
+    }
+
     this.emit('phase:start', { phase: phase.label });
     this._writeState('running', phase.label, []);
     if (this._telemetry) this._telemetry.phaseStart(sessionId, phase.label);
@@ -119,6 +143,25 @@ class AgentOrchestrator extends EventEmitter {
         });
         this._writeBlocker(failed);
         break;
+      }
+
+      // Check CoherenceMonitor Phi — halt wave on critical rot risk
+      if (this._coherenceMonitor) {
+        try {
+          const coherence = this._coherenceMonitor.assess(sessionId);
+          if (this._telemetry) {
+            this._telemetry.emit({ type: 'coherence:phi', sessionId, ...coherence });
+          }
+          if (coherence.rotRisk === 'critical') {
+            const snapshot = this._coherenceMonitor.distill(sessionId);
+            if (this._contextStore) {
+              try { this._contextStore.saveSnapshot(sessionId, 'coherence:distill', snapshot); } catch { /* */ }
+            }
+            this.emit('wave:coherence-halt', { waveIndex: wave.index, phi: coherence.phi, warning: coherence.warning });
+            this._coherenceMonitor.clearSession(sessionId);
+            break;
+          }
+        } catch { /* coherence check is non-critical */ }
       }
 
       this.emit('wave:complete', { waveIndex: wave.index });
@@ -169,14 +212,51 @@ class AgentOrchestrator extends EventEmitter {
           }
           if (this._telemetry) this._telemetry.agentSpawn(sessionId, task.id, agentId);
 
+          // Register task as a Requirement node in the Knowledge Graph
+          if (this._knowledgeGraph) {
+            try {
+              this._knowledgeGraph.upsertNode({
+                node_id: `task:${task.id}`,
+                type: 'Requirement',
+                metadata: { description: task.description, sessionId, waveIndex: wave.index },
+              });
+              this._knowledgeGraph.addEdge({
+                source_id: `session:${sessionId}`,
+                target_id: `task:${task.id}`,
+                relationship: 'DEPENDS_ON',
+              });
+            } catch { /* best-effort */ }
+          }
+
           const start = Date.now();
           return this._spawnAgent(task).then(
             (output) => {
+              const durationMs = Date.now() - start;
               if (this._telemetry) this._telemetry.agentComplete(sessionId, task.id, agentId, {
-                exitCode: 0, durationMs: Date.now() - start,
+                exitCode: 0, durationMs,
               });
               if (this._contextStore) {
                 try { this._contextStore.completeExecution(agentId, output, 0); } catch { /* */ }
+              }
+              // Mark task as IMPLEMENTS the session decision in the Knowledge Graph
+              if (this._knowledgeGraph) {
+                try {
+                  this._knowledgeGraph.addEdge({
+                    source_id: `task:${task.id}`,
+                    target_id: `session:${sessionId}`,
+                    relationship: 'IMPLEMENTS',
+                  });
+                } catch { /* best-effort */ }
+              }
+              // Record agent output in CoherenceMonitor
+              if (this._coherenceMonitor) {
+                try {
+                  this._coherenceMonitor.record({
+                    sessionId,
+                    taskId: task.id,
+                    response: typeof output === 'string' ? output : JSON.stringify(output),
+                  });
+                } catch { /* best-effort */ }
               }
               return output;
             },

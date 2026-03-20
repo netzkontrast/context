@@ -78,11 +78,11 @@ test('constructor: _verifier is initialized', () => {
   assert.equal(typeof orch._verifier.check, 'function');
 });
 
-test('constructor: gracefully degrades when context-store is unavailable', () => {
-  // context-store requires better-sqlite3 which is not installed
+test('constructor: initializes context-store when better-sqlite3 is available', () => {
+  // better-sqlite3 is now a production dependency — ContextStore should init
   const orch = new AgentOrchestrator();
-  // Should not throw; _contextStore may be null
-  assert.equal(orch._contextStore, null);
+  // Must not throw; _contextStore is truthy when the module loads successfully
+  assert.ok(orch._contextStore !== null);
 });
 
 test('constructor: suitePath defaults to .suite in cwd', () => {
