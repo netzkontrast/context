@@ -209,6 +209,83 @@ class ContextStore {
     return { totalTokens, breakdown };
   }
 
+  // ── Paraconsistent conflict detection ────────────────────────────────────────
+
+  /**
+   * Detect potentially contradictory snapshots within a session for a given key.
+   *
+   * Rather than silently synthesising conflicting context (which triggers
+   * hallucination via classical-logic explosion), this method flags conflicts
+   * so agents can isolate paradoxes and escalate rather than guess.
+   *
+   * Algorithm:
+   *   1. Retrieve all snapshots for (sessionId, key) ordered by insertion time
+   *   2. For each adjacent pair, compute a simple lexical dissimilarity score
+   *      (1 - Jaccard similarity of trigram sets)
+   *   3. If dissimilarity exceeds threshold, the pair is a contradiction candidate
+   *   4. Return all candidate pairs with their dissimilarity score
+   *
+   * @param {string} sessionId
+   * @param {string} key
+   * @param {number} [threshold=0.7] - Dissimilarity threshold (0–1); higher = stricter
+   * @returns {{ hasContradiction: boolean, conflicts: Array<{a, b, dissimilarity}> }}
+   */
+  detectContradiction(sessionId, key, threshold = 0.7) {
+    const snapshots = this.db.prepare(
+      'SELECT id, key, content, created_at FROM context_snapshots WHERE session_id = ? AND key = ? ORDER BY id ASC'
+    ).all(sessionId, key);
+
+    if (snapshots.length < 2) {
+      return { hasContradiction: false, conflicts: [] };
+    }
+
+    const conflicts = [];
+
+    for (let i = 0; i < snapshots.length - 1; i++) {
+      const a = snapshots[i];
+      const b = snapshots[i + 1];
+      const dissimilarity = this._trigramDissimilarity(a.content, b.content);
+      if (dissimilarity >= threshold) {
+        conflicts.push({ a, b, dissimilarity: +dissimilarity.toFixed(4) });
+      }
+    }
+
+    return { hasContradiction: conflicts.length > 0, conflicts };
+  }
+
+  /**
+   * Compute trigram-based dissimilarity between two strings.
+   * Returns 0.0 (identical) to 1.0 (completely different).
+   * @param {string} a
+   * @param {string} b
+   * @returns {number}
+   */
+  _trigramDissimilarity(a, b) {
+    const trigrams = (str) => {
+      const s = str.toLowerCase().replace(/\s+/g, ' ').trim();
+      const set = new Set();
+      for (let i = 0; i < s.length - 2; i++) {
+        set.add(s.slice(i, i + 3));
+      }
+      return set;
+    };
+
+    const ta = trigrams(a || '');
+    const tb = trigrams(b || '');
+
+    if (ta.size === 0 && tb.size === 0) return 0;
+    if (ta.size === 0 || tb.size === 0) return 1;
+
+    let intersection = 0;
+    for (const t of ta) {
+      if (tb.has(t)) intersection++;
+    }
+
+    const union = ta.size + tb.size - intersection;
+    const jaccard = intersection / union;
+    return 1 - jaccard;
+  }
+
   // ── Cleanup ───────────────────────────────────────────────────────────────────
 
   close() {

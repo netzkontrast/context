@@ -72,12 +72,12 @@ Construct an autonomous Claude Suite developer toolkit using deterministic conte
 - [x] `lib/ldar.js` — Learning Distraction-Aware Retrieval: adaptive band selection over FTS5, distractor penalty, CUE assessment
 - [x] `lib/knowledge-graph.js` — Entity-Edge Knowledge Graph: File/Function/Class/Requirement/Decision nodes; IMPLEMENTS/DEPENDS_ON/MODIFIES/OBSOLETES/TESTS edges; centrality scoring; ContextRelevanceScore; multi-hop BFS traversal
 - [x] `lib/coherence-monitor.js` — IIT Phi-inspired coherence tracking: CONSERVATIVE_COLLAPSE, VERBOSE_INFLATION, PREMATURE_COMMITMENT detection; distillation snapshots; rot-risk classification
-- [ ] Wire LDAR into Researcher Agent for SQ3R deep-reading (Phase 6 Wave 3)
-- [ ] Wire KnowledgeGraph into AgentOrchestrator: populate entities from DAG nodes, track IMPLEMENTS/MODIFIES edges on task completion
-- [ ] Wire CoherenceMonitor into session lifecycle: emit Phi snapshots to Telemetry; halt wave on critical rot risk
-- [ ] `claude-suite graph` CLI command: inspect knowledge graph nodes, edges, and centrality scores
-- [ ] Paraconsistent conflict detection: flag contradictory context entries in ContextStore rather than silent synthesis
-- [ ] Context Distillation pipeline: auto-compress session memory at 80% token budget (SQ3R Recite phase)
+- [x] `lib/sq3r.js` — SQ3R pipeline: Survey (structure extraction) → Question (3–5 anchored queries) → Read (LDAR, max 3 iterations) → Recite (distilled Markdown summary) → Review (ContextStore + audit event + clear)
+- [x] Wire KnowledgeGraph into AgentOrchestrator: session as Decision node; tasks as Requirement nodes; DEPENDS_ON + IMPLEMENTS edges tracked
+- [x] Wire CoherenceMonitor into session lifecycle: Phi check post-wave; critical rot halts execution; distillation snapshot persisted; `coherence:phi` telemetry events emitted
+- [x] `claude-suite graph` CLI command: `list [--type]`, `show <node-id>`, `traverse <node-id> [--rel] [--depth]`, `stats`
+- [x] Paraconsistent conflict detection: `ContextStore.detectContradiction(sessionId, key, threshold)` — trigram dissimilarity; returns conflict pairs with scores; no silent synthesis
+- [ ] Context Distillation pipeline: auto-compress session memory at 80% token budget (hook into `_buildSterileContext`)
 
 ### Phase 11: MCP Gateway & Code Mode Orchestration (Weeks 13-14)
 *Implements Bifrost Gateway pattern from the Architecture of Intent research.*

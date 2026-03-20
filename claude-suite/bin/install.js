@@ -466,5 +466,98 @@ program
     store.close();
   });
 
+// ---------------------------------------------------------------------------
+// Phase 10: Knowledge Graph Commands
+// ---------------------------------------------------------------------------
+
+program
+  .command('graph <subcommand> [arg]')
+  .description('Inspect the Knowledge Graph (subcommands: list, show, traverse, stats)')
+  .option('-t, --type <type>', 'Filter nodes by type (File, Function, Class, Requirement, Decision)')
+  .option('-r, --rel <relationship>', 'Filter edges by relationship when traversing')
+  .option('-d, --depth <n>', 'Traversal depth', '2')
+  .action((subcommand, arg, options) => {
+    console.log(`\n${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}`);
+    console.log(`${cyan} CLAUDE SUITE ► KNOWLEDGE GRAPH${reset}`);
+    console.log(`${cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${reset}\n`);
+
+    let KnowledgeGraph;
+    try {
+      KnowledgeGraph = require('../lib/knowledge-graph').KnowledgeGraph;
+    } catch (err) {
+      console.error(`${yellow}⚠ Knowledge graph not available.${reset}`);
+      process.exit(1);
+    }
+
+    const dbPath = path.join(process.cwd(), '.suite', 'graph.db');
+    if (!fs.existsSync(dbPath)) {
+      console.error(`${yellow}⚠ No graph database found. Execute a phase first to populate the graph.${reset}`);
+      process.exit(1);
+    }
+
+    const kg = new KnowledgeGraph({ dbPath });
+
+    try {
+      if (subcommand === 'list') {
+        const nodes = kg.listNodes(options.type || null);
+        if (nodes.length === 0) {
+          console.log('  No nodes found.');
+        } else {
+          nodes.forEach(n => {
+            console.log(`  ${cyan}${n.node_id}${reset}  [${n.type}]  hash=${n.content_hash || 'none'}`);
+          });
+          console.log(`\n  ${nodes.length} node(s) total.\n`);
+        }
+
+      } else if (subcommand === 'show') {
+        if (!arg) { console.error(`${yellow}⚠ Usage: graph show <node-id>${reset}`); process.exit(1); }
+        const node = kg.getNode(arg);
+        if (!node) { console.log(`  Node not found: ${arg}`); }
+        else {
+          console.log(`  ${cyan}${node.node_id}${reset}`);
+          console.log(`  Type:    ${node.type}`);
+          console.log(`  Hash:    ${node.content_hash || 'none'}`);
+          console.log(`  Updated: ${node.updated_at}`);
+          console.log(`  Metadata: ${JSON.stringify(node.metadata)}`);
+          const out = kg.getOutEdges(arg);
+          const inn = kg.getInEdges(arg);
+          console.log(`\n  Out-edges (${out.length}):`);
+          out.forEach(e => console.log(`    → ${e.target_id}  [${e.relationship}]`));
+          console.log(`  In-edges (${inn.length}):`);
+          inn.forEach(e => console.log(`    ← ${e.source_id}  [${e.relationship}]`));
+          const centrality = kg.centralityScore(arg);
+          console.log(`\n  Centrality score: ${yellow}${centrality.toFixed(4)}${reset}\n`);
+        }
+
+      } else if (subcommand === 'traverse') {
+        if (!arg) { console.error(`${yellow}⚠ Usage: graph traverse <node-id>${reset}`); process.exit(1); }
+        const depth = parseInt(options.depth, 10) || 2;
+        const { nodes, edges } = kg.traverse(arg, depth, options.rel || null);
+        console.log(`  Traversal from ${cyan}${arg}${reset} (depth=${depth}):`);
+        console.log(`  Nodes reached: ${nodes.length}`);
+        nodes.forEach(n => console.log(`    • ${n}`));
+        console.log(`\n  Edges traversed: ${edges.length}`);
+        edges.forEach(e => console.log(`    ${e.source_id} →[${e.relationship}]→ ${e.target_id}`));
+        console.log('');
+
+      } else if (subcommand === 'stats') {
+        const s = kg.stats();
+        console.log(`  Total nodes: ${yellow}${s.nodeCount}${reset}`);
+        console.log(`  Total edges: ${yellow}${s.edgeCount}${reset}`);
+        console.log('\n  Nodes by type:');
+        s.byType.forEach(r => console.log(`    ${r.type}: ${r.count}`));
+        console.log('\n  Edges by relationship:');
+        s.byRelationship.forEach(r => console.log(`    ${r.relationship}: ${r.count}`));
+        console.log('');
+
+      } else {
+        console.error(`${yellow}⚠ Unknown subcommand: ${subcommand}. Use: list, show, traverse, stats${reset}`);
+        process.exit(1);
+      }
+    } finally {
+      kg.close();
+    }
+  });
+
 // Execute
 program.parse(process.argv);

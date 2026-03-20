@@ -41,17 +41,18 @@ All foundational infrastructure is complete:
   - `clearSession()` — context eviction after distillation
   - 17 tests including pattern matching and boundary conditions
 
-#### Wave 2 — Integration (Next)
-- [ ] Wire LDAR into Researcher Agent (Phase 6 Wave 3): replace raw FTS5 calls with `ldar.retrieve()`
-- [ ] Wire KnowledgeGraph into AgentOrchestrator: register task DAG nodes as entities; add IMPLEMENTS edges on completion
-- [ ] Wire CoherenceMonitor into session lifecycle: Phi snapshots pushed to Telemetry; wave halted on `rotRisk === 'critical'`
-- [ ] `claude-suite graph` CLI command: `list`, `show <node-id>`, `traverse <node-id>`, `stats`
-- [ ] Paraconsistent conflict flagging in ContextStore: `detectContradiction(sessionId, key)` using FTS5 co-occurrence
+#### Wave 2 — Integration (COMPLETE)
+- [x] `lib/sq3r.js` — SQ3R pipeline (Survey/Question/Read/Recite/Review) using LDAR; ready for Researcher Agent
+- [x] Wire KnowledgeGraph into AgentOrchestrator: session registered as Decision node; tasks registered as Requirement nodes; DEPENDS_ON + IMPLEMENTS edges on completion
+- [x] Wire CoherenceMonitor into session lifecycle: Phi assessment after each wave; wave halted on `rotRisk === 'critical'`; distillation snapshot saved to ContextStore; session cleared post-distillation; `coherence:phi` events emitted to Telemetry
+- [x] `claude-suite graph` CLI command: `list [--type]`, `show <node-id>`, `traverse <node-id> [--rel] [--depth]`, `stats`
+- [x] Paraconsistent conflict detection: `detectContradiction(sessionId, key, threshold)` in ContextStore using trigram-based dissimilarity; returns `{ hasContradiction, conflicts[] }` — no silent synthesis
+- [x] 43 new tests: sq3r (26), context-store-contradiction (13), orchestrator-phase10 (7); total 308 tests
 
-#### Wave 3 — Context Distillation Pipeline (After Wave 2)
-- [ ] Auto-compress at 80% token budget: invoke `ldar.retrieve()` → `coherenceMonitor.distill()` → `store.saveSnapshot()`
-- [ ] SQ3R pipeline runner: Survey → Question → Read (LDAR) → Recite (distill) → Review (clear) for Researcher Agent
-- [ ] Session replay CLI: `claude-suite replay <session-id>` reconstructs execution from ContextStore
+#### Wave 3 — Context Distillation Pipeline (Next)
+- [ ] Auto-compress at 80% token budget: invoke `ldar.retrieve()` → `coherenceMonitor.distill()` → `store.saveSnapshot()` — hook into Orchestrator `_buildSterileContext`
+- [x] SQ3R pipeline runner: `lib/sq3r.js` complete — Survey/Question/LDAR-Read/Recite/Review
+- [x] Session replay CLI: `claude-suite replay <session-id>` already implemented via `telemetry.readSessionLogs()`
 
 ### Phase 5 Remaining Execution Plan
 
