@@ -177,29 +177,35 @@ cd claude-suite && npm test
 ## Repository Structure
 
 ```
-context/
-  README.md                    # This file
-  Concept.md                   # Theoretical design and paradigm shift
-  AGENTS.md                    # Core operating directives for autonomous agents
-  roadmap.md                   # Immutable vision and high-level phases
-  planning.md                  # Current execution state and comprehensive plan
-  backlog.md                   # Deferred requirements and future ideas
-  docs/
-    advancedArchitecturalBlueprint.md       # Research: repository ecosystems
-    comprehensiveArchitectureBlueprint.md   # Research: EDA, Code Digital Twins, SQ3R
-  claude-suite/                # Main package
-    package.json               # v0.1.0, single dependency
-    bin/install.js             # CLI entry point (280 lines)
-    lib/
-      orchestrator.js          # Wave Execution engine (321 lines)
-      roadmap-parser.js        # ROADMAP.md parser + DAG builder (164 lines)
-      nyquist.js               # Command classification layer (194 lines)
-      mcp-registry.js          # MCP tool registry (162 lines)
-      truth-verifier.js        # Schema validation + confidence (229 lines)
-      agent-runner.js          # Subprocess agent executor (59 lines)
-    test/                      # 77 tests, 4 suites
-    templates/                 # PROJECT.md, ROADMAP.md, REQUIREMENTS.md, STATE.md
-    workflows/                 # new-project.md workflow definition
+.
+├── .github/                   # CI/CD workflows
+├── .gitignore
+├── README.md                  # Main entry point (this file)
+├── Concept.md                 # High-level vision and paradigm shift
+├── docs/                      # Architectural Research & Blueprints
+│   ├── README.md              # Entry point for deep reading
+│   ├── agenticSystemArchitecture.md
+│   ├── advancedArchitecturalBlueprint.md
+│   ├── comprehensiveArchitectureBlueprint.md
+│   ├── strategicResearchRoadmap.md
+│   ├── gedanken.md            # Structural refactoring analysis
+│   └── plan.md                # Structural refactoring plan
+└── claude-suite/              # The actual CLI application
+    ├── package.json
+    ├── skills/                # Unified Agentic Capabilities Registry
+    │   ├── audit/             # Security & code scanning skills
+    │   ├── dev/               # Code modification & logic skills
+    │   ├── diagnose/          # Error resolution skills
+    │   ├── init/              # Project scaffolding skills
+    │   ├── research/          # Documentation & stack discovery skills
+    │   ├── retro/             # Memory & state management skills
+    │   └── verify/            # Testing & validation skills
+    ├── bin/                   # CLI entry points
+    ├── lib/                   # Core orchestrator and execution engines
+    ├── templates/             # Markdown template scaffolding
+    ├── workflows/             # Workflow definitions
+    ├── test/                  # Test suites
+    └── CLAUDE.md              # Active memory core for the suite
 ```
 
 ## Inspirations
