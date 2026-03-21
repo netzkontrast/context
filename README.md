@@ -3,8 +3,8 @@
 **Enterprise-grade orchestration for autonomous AI development workflows.**
 
 [![Node.js](https://img.shields.io/badge/Node.js-16%2B-green)]()
-[![Tests](https://img.shields.io/badge/tests-77%20passing-brightgreen)]()
-[![Dependencies](https://img.shields.io/badge/deps-1%20(commander)-blue)]()
+[![Tests](https://img.shields.io/badge/tests-163%20passing-brightgreen)]()
+[![Dependencies](https://img.shields.io/badge/deps-2%20(commander%2C%20better--sqlite3)-blue)]()
 [![Version](https://img.shields.io/badge/version-0.1.0-orange)]()
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)]()
 
@@ -157,18 +157,23 @@ Claude Suite implements a **zero-trust security posture**:
 cd claude-suite && npm test
 ```
 
-77 tests across 4 test suites using Node.js built-in `node:test` runner. Zero test dependencies.
+163 tests across 16 test suites using Node.js built-in `node:test` runner. Zero test dependencies.
 
 | Suite | Tests | Coverage |
 |-------|-------|----------|
+| `orchestrator.test.js` | 41 | Constructor, planWaves, execute, wave execution, state writing, verification |
 | `truth-verifier.test.js` | 37 | Schema validation, confidence scoring, thresholds |
+| `personas.test.js` | 35 | Registry, keyword routing, schema validation |
+| `skill-loader.test.js` | 28 | YAML parsing, discovery, loading, SkillLoader class |
 | `nyquist.test.js` | 27 | Command classification, tokenization, batch verify |
 | `roadmap-parser.test.js` | 25 | Phase parsing, DAG generation, path resolution |
 | `mcp-registry.test.js` | 18 | Tool registration, invocation, sandbox escapes |
+| `agent-runner.test.js` | 10 | Env validation, output structure, MCP tools, permissions |
+| + 8 more suites | — | coherence-monitor, context-store, knowledge-graph, ldar, sq3r, telemetry |
 
 ## Dependencies
 
-**Production:** 1 dependency — `commander@^11.0.0` (CLI routing)
+**Production:** 2 dependencies — `commander@^11.0.0` (CLI routing), `better-sqlite3@^12.8.0` (persistent storage)
 
 **Runtime:** Node.js built-ins only (`fs`, `path`, `events`, `child_process`, `os`)
 
@@ -201,11 +206,16 @@ cd claude-suite && npm test
     │   ├── retro/             # Memory & state management skills
     │   └── verify/            # Testing & validation skills
     ├── bin/                   # CLI entry points
-    ├── lib/                   # Core orchestrator and execution engines
+    ├── lib/                   # Core orchestrator and execution engines (14 modules)
     ├── templates/             # Markdown template scaffolding
     ├── workflows/             # Workflow definitions
-    ├── test/                  # Test suites
-    └── CLAUDE.md              # Active memory core for the suite
+    ├── test/                  # Test suites (16 files, 163+ tests)
+    ├── CLAUDE.md              # Context planning & memory directives
+    ├── AGENTS.md              # Autonomous agent operating rules
+    ├── planning.md            # Current focus & phase tracking
+    ├── roadmap.md             # Development roadmap (Phases 1–7 complete)
+    ├── backlog.md             # Deferred work & future ideas
+    └── sources.md             # External references & inspirations
 ```
 
 ## Inspirations
@@ -218,7 +228,7 @@ cd claude-suite && npm test
 
 ---
 
-*v0.1.0 — Phase 0-4 complete. ~1,100 lines of source, 77 tests, 1 dependency.*
+*v0.1.0 — Phases 1–7 complete. ~3,850 lines of source, 163 tests, 2 dependencies.*
 
 ## High-Coherence Agentic Systems & Software 3.0 Architecture
 

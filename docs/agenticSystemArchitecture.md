@@ -1,6 +1,10 @@
 # Agentic System Architecture: Engineering the Architecture of Intent
 
-*Reference synthesis from the Strategic Research Roadmap (2025). Distilled to implementation-relevant primitives for the Claude Suite.*
+> **Scope**: Implementation-level module specifications for `claude-suite/lib/`. This is the most code-adjacent architecture doc. For theoretical foundations, see [strategicResearchRoadmap.md](./strategicResearchRoadmap.md). For the high-level system design, see [comprehensiveArchitectureBlueprint.md](./comprehensiveArchitectureBlueprint.md).
+>
+> **Implementation Status**: All modules described below have been implemented and tested. See `claude-suite/roadmap.md` (Phases 1–7 complete).
+
+*Reference synthesis from the Strategic Research Roadmap. Distilled to implementation-relevant primitives for the Claude Suite.*
 
 ---
 

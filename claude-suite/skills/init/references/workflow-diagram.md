@@ -19,7 +19,7 @@
          │
          ▼
   ┌──────────────┐
-  │  2. GENERATE │  Create: PROJECT.md, ROADMAP.md, REQUIREMENTS.md,
+  │  2. GENERATE │  Create: PROJECT.md, roadmap.md, REQUIREMENTS.md,
   │  (Create)    │  STATE.md, planning.md. Validate roadmap via parser
   └──────┬───────┘
          │

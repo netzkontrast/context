@@ -136,7 +136,7 @@ Generate from detected stack and user description:
 <extracted from CONTRIBUTING or detected from config files>
 ```
 
-### 2.2 — ROADMAP.md
+### 2.2 — roadmap.md
 
 Generate from user's development goals:
 - Create phases with `## Phase N: <name>` headings

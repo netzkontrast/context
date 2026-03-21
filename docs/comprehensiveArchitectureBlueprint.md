@@ -1,5 +1,7 @@
 # Comprehensive Architecture Blueprint for an Interconnected, Autonomous Claude Agent Suite
 
+> **Scope**: System design — the Five-Layer architecture, Context Engine, Orchestrator, MCP Registry, Nyquist Validation, LDAR, SQ3R pipelines. For ecosystem analysis and external tool patterns, see [advancedArchitecturalBlueprint.md](./advancedArchitecturalBlueprint.md). For implementation-level module specs, see [agenticSystemArchitecture.md](./agenticSystemArchitecture.md).
+
 The Structural Paradigm Shift Toward Software 3.0
 The discipline of software engineering is currently undergoing a fundamental, structural paradigm shift toward what industry analysts classify as Software 3.0, a domain where Large Language Models (LLMs) transcend their origins as predictive text engines to function as the foundational operating systems orchestrating autonomous development tasks. As modern software ecosystems scale into increasingly intricate architectures—encompassing polyglot microservices, serverless deployments, and highly coupled enterprise monolithic systems—traditional single-agent artificial intelligence assistants encounter severe, and often catastrophic, limitations. These operational limitations manifest primarily as context window saturation, logical degradation over prolonged interactions, and an inherent inability to maintain long-horizon architectural intent without human intervention.
 

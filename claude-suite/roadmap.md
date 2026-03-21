@@ -38,7 +38,7 @@
 - [x] Extend `AgentOrchestrator` — persona routing in `_buildSterileContext` and `SUITE_PERSONA` env injection.
 - [x] Extend `agent-runner.js` — persona resolution and skill discovery in subprocess.
 - [x] Add `personas` CLI command — list all registered personas with context budgets and tools.
-- [x] Add `skills` CLI command — discover .claude-skills-* directories and display skill metadata.
+- [x] Add `skills` CLI command — discover `skills/` directory and display skill metadata.
 - [x] Write `test/skill-loader.test.js` — 28 tests covering parsing, discovery, loading, SkillLoader class.
 - [x] Write `test/personas.test.js` — 35 tests covering registry, keyword routing, schema validation.
 - [x] Extend `test/orchestrator.test.js` — persona integration tests for `_buildSterileContext`.

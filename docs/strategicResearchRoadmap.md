@@ -1,5 +1,7 @@
 # Strategic Research Roadmap: Engineering the Architecture of Intent and High-Coherence Agentic Systems
 
+> **Scope**: Theoretical foundations and philosophical rationale. Start here if you need to understand *why* the Claude Suite is designed the way it is. For implementation details, see [agenticSystemArchitecture.md](./agenticSystemArchitecture.md). For system design, see [comprehensiveArchitectureBlueprint.md](./comprehensiveArchitectureBlueprint.md).
+
 ## 1. Introduction: The Epistemological and Architectural Shift to Software 3.0
 The discipline of software engineering is currently undergoing a fundamental reconfiguration of its foundational pillars, representing a transition from deterministic, manually authored logic to probabilistic, intent-driven orchestration. This paradigm shift, widely formalized within the engineering community as "Software 3.0," completely redefines the atomic unit of software construction. In the era of Software 1.0, human developers crafted explicit deterministic instructions; in Software 2.0, engineers optimized neural network weights via backpropagation against fixed datasets. Software 3.0 introduces a fundamentally new agentic layer of abstraction in which Large Language Models (LLMs) operate as dynamic reasoning engines, interpreting natural language intent to autonomously plan actions, generate executable code, and coordinate complex external tools.
 

@@ -83,7 +83,7 @@ Phase N: <phase name> — Task: <specific task description>
 ### 1.1 — Explore the Codebase
 
 Before planning implementation, understand what exists:
-- Use the Explore agent to map relevant source files
+- Use the Agent tool (with a research-oriented prompt) to map relevant source files
 - Read existing implementations that the task will touch or extend
 - Identify interfaces, patterns, and conventions already in use
 
@@ -171,7 +171,7 @@ Fix any lint errors introduced by your changes.
 If the project has a CLI or can be executed, run a quick smoke test:
 - For CLI tools: run `--help` or a basic command
 - For libraries: verify imports work
-- For the claude-suite specifically: run `node bin/install.js --help`
+- Example (claude-suite): `node bin/install.js --help`
 
 ---
 
